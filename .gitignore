@@ -1,0 +1,7 @@
+node_modules
+dist
+_qa
+.DS_Store
+scripts/_hero/
+scripts/*.log
+__pycache__/

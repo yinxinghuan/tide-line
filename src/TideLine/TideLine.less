@@ -1,0 +1,1051 @@
+@bg: #06141d;
+@bg2: #0a2230;
+@panel: rgba(255, 255, 255, 0.05);
+@panel2: rgba(255, 255, 255, 0.09);
+@line: rgba(255, 255, 255, 0.1);
+@line2: rgba(255, 255, 255, 0.16);
+@text: #eef6f7;
+@muted: #93a8ad;
+@teal: #34d6c4;
+@teal-d: #14a896;
+@warm: #ffc06a;
+@ink: #04221f;
+
+@display: 'Fraunces', Georgia, 'Times New Roman', serif;
+@sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+@mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+// specimen-plate paper
+@paper: #f4ecd7;
+@paper-sh: #e7dcc0;
+@paper-ink: #1d4a44;
+@paper-ink2: #6b6a52;
+@oxblood: #b4533f;
+
+.tl-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  background:
+    radial-gradient(120% 60% at 50% -8%, rgba(52, 214, 196, 0.1), transparent 60%),
+    linear-gradient(180deg, @bg2, @bg 55%);
+  color: @text;
+  overflow: hidden;
+  font-family: @sans;
+  display: flex;
+  flex-direction: column;
+
+  svg {
+    flex-shrink: 0;
+  }
+  button:focus-visible {
+    outline: 2px solid @teal;
+    outline-offset: 2px;
+  }
+}
+
+.tl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: none;
+  border-radius: 999px;
+  padding: 15px 28px;
+  font-family: @sans;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: @text;
+  background: @panel2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  &:active {
+    transform: scale(0.97);
+  }
+  &--primary {
+    background: linear-gradient(135deg, @teal, @teal-d);
+    color: @ink;
+    box-shadow: 0 10px 26px -6px rgba(52, 214, 196, 0.5);
+    &:hover {
+      filter: brightness(1.05);
+    }
+  }
+}
+
+.tl-mute {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid @line;
+  border-radius: 50%;
+  color: @text;
+  background: rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease;
+  &:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.tl-tocoast {
+  position: absolute;
+  bottom: 20px;
+  right: 16px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid @line2;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: @text;
+  background: rgba(4, 16, 22, 0.55);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+// ── Beach ──
+.tl-beach {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  &__canvas {
+    position: absolute;
+    inset: 0;
+  }
+  &__top {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 64px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  &__bar {
+    flex: 1;
+    height: 9px;
+    border-radius: 999px;
+    background: rgba(2, 12, 18, 0.45);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  }
+  &__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, @teal, @warm);
+    transition: width 0.3s cubic-bezier(0.3, 0.9, 0.4, 1);
+  }
+  &__count {
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
+    min-width: 44px;
+    text-align: right;
+  }
+}
+
+.tl-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 21%;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  &__hand {
+    color: #fff;
+    animation: tl-swipe 1.9s ease-in-out infinite;
+    filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.55));
+  }
+  &__trail {
+    width: 150px;
+    height: 3px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+    animation: tl-trail 1.9s ease-in-out infinite;
+  }
+  &__label {
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: #fff;
+    background: rgba(4, 16, 22, 0.42);
+    padding: 9px 18px;
+    border-radius: 999px;
+    backdrop-filter: blur(8px);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+@keyframes tl-swipe {
+  0%, 100% { transform: translateX(-58px) rotate(-6deg); }
+  50% { transform: translateX(58px) rotate(6deg); }
+}
+@keyframes tl-trail {
+  0%, 100% { opacity: 0.25; transform: scaleX(0.65); }
+  50% { opacity: 1; transform: scaleX(1.1); }
+}
+
+.tl-restored {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 46%, rgba(3, 14, 19, 0.66), rgba(2, 10, 14, 0.86));
+  backdrop-filter: blur(3px);
+  animation: tl-fade 0.5s ease both;
+  &__card {
+    text-align: center;
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: tl-pop 0.5s ease both;
+  }
+  &__eyebrow {
+    font-family: @mono;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: @teal;
+    margin-bottom: 16px;
+  }
+  &__stamp {
+    width: 78%;
+    max-width: 250px;
+    margin-bottom: 18px;
+  }
+  &__big {
+    color: @warm;
+    font-weight: 700;
+    font-size: 15px;
+    margin: 0 0 2px;
+  }
+  &__sub {
+    color: @muted;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+}
+@keyframes tl-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tl-pop {
+  from { opacity: 0; transform: translateY(18px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ── Coast ──
+.tl-coast {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+  }
+  &__hero {
+    text-align: center;
+    padding: 38px 10px 22px;
+  }
+  &__brand {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: @teal;
+  }
+  &__together {
+    margin-top: 18px;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: @muted;
+  }
+  &__big {
+    font-family: @display;
+    font-weight: 600;
+    font-size: 58px;
+    line-height: 1.02;
+    letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+    margin: 4px 0;
+    background: linear-gradient(135deg, #d8fff8, @teal 55%, @warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  &__unit {
+    font-size: 13px;
+    color: @muted;
+    letter-spacing: 0.2px;
+  }
+  &__meta {
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: @text;
+    opacity: 0.9;
+  }
+  &__dot {
+    margin: 0 9px;
+    color: @muted;
+  }
+  &__empty {
+    text-align: center;
+    color: @muted;
+    padding: 44px 24px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  &__spacer {
+    height: 104px;
+  }
+  &__cta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(180deg, transparent, @bg 42%);
+    pointer-events: none;
+    button {
+      pointer-events: auto;
+      width: 100%;
+      max-width: 360px;
+    }
+  }
+}
+
+.tl-board {
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 7px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.18s ease;
+    &:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    &--me {
+      background: rgba(52, 214, 196, 0.12);
+      &:hover {
+        background: rgba(52, 214, 196, 0.16);
+      }
+    }
+  }
+  &__rank {
+    width: 20px;
+    text-align: center;
+    font-weight: 800;
+    color: @muted;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  &__av {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: @panel2;
+    &--ph {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: @teal;
+    }
+  }
+  &__name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__litter {
+    font-size: 14px;
+    font-weight: 800;
+    color: @teal;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tl-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+.tl-card {
+  background: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  &:active {
+    transform: scale(0.98) rotate(-0.6deg);
+  }
+  &__art {
+    position: relative;
+    width: 100%;
+  }
+  &__mine {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 3;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: @ink;
+    background: @teal;
+    padding: 3px 8px;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 9px 4px 2px;
+  }
+  &__stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: @muted;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+  }
+  &__cre {
+    color: @text;
+  }
+}
+
+// ── Stamp / specimen plate (skeuomorphic-frames: perforations bite the image) ──
+.tl-stamp {
+  --r: 7px; // hole radius
+  --s: 20px; // hole spacing
+  position: relative;
+
+  // the perforated stamp itself — one clean row of holes per edge via 4 edge
+  // layers + mask-composite:intersect (canonical from same-brain .sb-fr--stamp)
+  &__paper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 5 / 4;
+    overflow: hidden;
+    background: @paper;
+    filter: drop-shadow(0 7px 16px rgba(0, 0, 0, 0.48));
+    -webkit-mask:
+      radial-gradient(var(--r) at 50% 0, #0000 96%, #000) calc(var(--s) / 2) 0 / var(--s) 100% repeat-x,
+      radial-gradient(var(--r) at 50% 100%, #0000 96%, #000) calc(var(--s) / 2) 100% / var(--s) 100% repeat-x,
+      radial-gradient(var(--r) at 0 50%, #0000 96%, #000) 0 calc(var(--s) / 2) / 100% var(--s) repeat-y,
+      radial-gradient(var(--r) at 100% 50%, #0000 96%, #000) 100% calc(var(--s) / 2) / 100% var(--s) repeat-y;
+    -webkit-mask-composite: source-in, source-in, source-in;
+    mask:
+      radial-gradient(var(--r) at 50% 0, #0000 96%, #000) calc(var(--s) / 2) 0 / var(--s) 100% repeat-x,
+      radial-gradient(var(--r) at 50% 100%, #0000 96%, #000) calc(var(--s) / 2) 100% / var(--s) 100% repeat-x,
+      radial-gradient(var(--r) at 0 50%, #0000 96%, #000) 0 calc(var(--s) / 2) / 100% var(--s) repeat-y,
+      radial-gradient(var(--r) at 100% 50%, #0000 96%, #000) 100% calc(var(--s) / 2) / 100% var(--s) repeat-y;
+    mask-composite: intersect;
+    // scene canvas fills the stamp
+    > div { position: absolute; inset: 0; }
+  }
+  // "country name" printed on the stamp — decorative, no shadow
+  &__issue {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    z-index: 2;
+    font-family: @display;
+    font-weight: 600;
+    font-size: 25px;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.92);
+    pointer-events: none;
+  }
+  // postmark stamped across the top-right corner — the part that spills past the
+  // stamp is clipped by __paper's overflow:hidden + perforation mask
+  &__mark {
+    position: absolute;
+    top: -13%;
+    right: -11%;
+    z-index: 3;
+    width: 44%;
+    max-width: 122px;
+    aspect-ratio: 1;
+    transform: rotate(-12deg);
+    stroke: rgba(22, 38, 36, 0.6);
+    fill: rgba(22, 38, 36, 0.6);
+    pointer-events: none;
+  }
+  &__mark-arc {
+    font-family: @sans;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    stroke: none;
+  }
+  &__mark-day {
+    font-family: @mono;
+    font-size: 22px;
+    font-weight: 600;
+    stroke: none;
+  }
+  &__mark-mon {
+    font-family: @mono;
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    stroke: none;
+  }
+
+  // album annotation, printed below the stamp on the dark substrate
+  &__cap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 9px;
+    padding: 0 2px;
+  }
+  &__id {
+    font-family: @mono;
+    font-size: 12px;
+    font-weight: 600;
+    color: @warm;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+  }
+  &__place {
+    flex: 1;
+    min-width: 0;
+    font-family: @mono;
+    font-size: 9.5px;
+    font-weight: 400;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: @muted;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__tod {
+    color: @teal;
+  }
+  &__date {
+    font-family: @mono;
+    font-size: 9.5px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    color: @muted;
+    flex-shrink: 0;
+  }
+
+  &--compact {
+    --r: 5px;
+    --s: 15px;
+    .tl-stamp__issue { font-size: 19px; left: 9px; bottom: 8px; }
+    .tl-stamp__cap { margin-top: 7px; gap: 6px; }
+    .tl-stamp__id { font-size: 11px; }
+    .tl-stamp__place { font-size: 8.5px; }
+    .tl-stamp__date { font-size: 8.5px; }
+  }
+
+  &--slam {
+    animation: tl-stamp-slam 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  }
+}
+@keyframes tl-stamp-slam {
+  0% { opacity: 0; transform: scale(1.5) rotate(-7deg); }
+  55% { opacity: 1; transform: scale(0.94) rotate(1.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-1.5deg); }
+}
+
+// ── chip ──
+.tl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: @sans;
+  color: @text;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  &--self {
+    font-weight: 800;
+    color: @teal;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  &__av {
+    border-radius: 50%;
+    object-fit: cover;
+    background: @panel2;
+    flex-shrink: 0;
+    &--ph {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: @teal;
+    }
+  }
+  &__name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ── Detail ──
+.tl-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+  }
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid @line;
+    background: @panel;
+    color: @text;
+    border-radius: 999px;
+    padding: 9px 17px;
+    font-family: @sans;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 14px;
+    transition: background 0.18s ease;
+    &:hover {
+      background: @panel2;
+    }
+  }
+  &__hero {
+    width: 100%;
+    margin: 2px 0;
+  }
+  &__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 16px 2px 4px;
+  }
+  &__by {
+    font-size: 13px;
+    color: @muted;
+  }
+  &__litter {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    color: @warm;
+  }
+  &__spacer {
+    height: 30px;
+  }
+}
+
+.tl-section {
+  margin-top: 22px;
+  &__title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: @muted;
+    margin-bottom: 12px;
+  }
+}
+
+.tl-release {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    border: 1px solid @line;
+    background: @panel;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+    &:hover {
+      border-color: @line2;
+    }
+    &:active {
+      transform: scale(0.88);
+      background: rgba(52, 214, 196, 0.18);
+      border-color: rgba(52, 214, 196, 0.4);
+    }
+  }
+}
+
+.tl-rel-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: @panel;
+    border: 1px solid @line;
+    border-radius: 999px;
+    padding: 5px 13px 5px 7px;
+  }
+  &__emoji {
+    display: inline-flex;
+  }
+}
+
+.tl-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  &__empty {
+    color: @muted;
+    font-size: 14px;
+  }
+}
+.tl-note {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  &__body {
+    margin-left: 29px;
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+  }
+  &__text {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  &__time {
+    font-size: 11px;
+    color: @muted;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tl-compose {
+  display: flex;
+  gap: 9px;
+  margin-top: 16px;
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid @line;
+    background: @panel;
+    color: @text;
+    border-radius: 999px;
+    padding: 12px 17px;
+    font-family: @sans;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.18s ease;
+    &::placeholder {
+      color: @muted;
+    }
+    &:focus {
+      border-color: @teal;
+    }
+  }
+  &__send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    color: @ink;
+    background: @teal;
+    cursor: pointer;
+    transition: filter 0.18s ease, opacity 0.18s ease;
+    &:hover {
+      filter: brightness(1.06);
+    }
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+}
+
+// leaderboard pill (collapsed entry on the coast hero)
+.tl-board-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  border: 1px solid @line2;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: @sans;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: @text;
+  background: @panel;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  svg {
+    color: @warm;
+  }
+  &:hover {
+    background: @panel2;
+  }
+}
+
+// ── Detail: minimal main + sticky action bar + bottom sheets ──
+.tl-peek {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+  padding: 8px 10px;
+  width: 100%;
+  border: 1px solid @line;
+  border-radius: 14px;
+  background: @panel;
+  cursor: pointer;
+  transition: border-color 0.18s ease;
+  &:hover {
+    border-color: @line2;
+  }
+}
+
+.tl-detail__bar {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, transparent, @bg 36%);
+}
+.tl-detail__add {
+  flex: 1;
+}
+.tl-detail__notes {
+  position: relative;
+  flex-shrink: 0;
+  background: @panel;
+  border: 1px solid @line;
+}
+.tl-detail__badge {
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: @ink;
+  background: @teal;
+}
+
+.tl-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(2, 10, 14, 0.55);
+  backdrop-filter: blur(4px);
+  animation: tl-fade 0.22s ease both;
+  &__panel {
+    width: 100%;
+    max-height: 82%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #0a2028;
+    border-top: 1px solid @line2;
+    border-radius: 26px 26px 0 0;
+    padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
+    box-shadow: 0 -20px 50px -16px rgba(0, 0, 0, 0.6);
+    animation: tl-slideup 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  }
+  &__handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    margin: 4px auto 14px;
+  }
+  &__title {
+    font-family: @display;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  &__sub {
+    margin-top: 20px;
+  }
+}
+@keyframes tl-slideup {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+// ── community milestone (whale) ──
+.tl-goal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 2px 4px;
+  padding: 12px 14px;
+  border: 1px solid @line;
+  border-radius: 16px;
+  background: @panel;
+  text-align: left;
+  &--done {
+    border-color: rgba(52, 214, 196, 0.4);
+    background: rgba(52, 214, 196, 0.1);
+  }
+  &__icon {
+    flex-shrink: 0;
+    display: flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+  }
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+  &__title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: @text;
+    margin-bottom: 7px;
+  }
+  &__track {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(2, 12, 18, 0.5);
+    overflow: hidden;
+  }
+  &__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, @teal, @warm);
+    transition: width 0.5s ease;
+  }
+  &__sub {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: @muted;
+    font-variant-numeric: tabular-nums;
+  }
+  &__back {
+    margin-left: 6px;
+    color: @teal;
+  }
+  &__chips {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+}
+
+// Detail: read-only wildlife row + bottom compose bar
+.tl-peek--static {
+  cursor: default;
+}
+.tl-compose--bar {
+  margin-top: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, transparent, @bg 36%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-hint__hand,
+  .tl-hint__trail {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
