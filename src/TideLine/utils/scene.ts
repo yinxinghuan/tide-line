@@ -482,10 +482,9 @@ export function placeCreatures(
       y = h * HORIZON + (foam - h * HORIZON) * (0.3 + rand() * 0.45);
       s = (c.kind === 'whale' || c.kind === 'orca' ? 0.11 : c.kind === 'ray' ? 0.08 : 0.05 + rand() * 0.02) * h;
     } else {
-      // near = BIG, far = tiny. Spread up the beach: far ones sit near the
-      // waterline, the big hero sits lower but is lifted by its own size so it
-      // isn't jammed against the bottom edge.
-      s = lerp(0.045, 0.36, depth) * h; // hero can reach ~36% of height
+      // ONE big focal animal (the hero) + a clearly smaller supporting cast —
+      // exaggerated size gap so the composition has a subject, not a uniform row.
+      s = (i === 0 ? lerp(0.38, 0.46, rand()) : lerp(0.05, 0.16, depth)) * h;
       const top = wet - (h - wet) * 0.08; // far/small up near the foam line
       const bot = h - (h - wet) * 0.02;
       y = top + (bot - top) * depth - s * 0.24;
