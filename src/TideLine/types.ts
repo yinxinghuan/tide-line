@@ -2,31 +2,27 @@ import type { GuestMessage, WithMessages } from '@shared/social/guestbook';
 
 export type Biome = 'tropical' | 'cove' | 'temperate' | 'dusk';
 
+/** Top-level environment. Expanded one at a time for Wild Line 2.0. */
+export type Habitat = 'ocean' | 'forest';
+
 export type CreatureKind =
-  | 'turtle'
-  | 'crab'
-  | 'gull'
-  | 'starfish'
-  | 'dolphin'
-  | 'seal'
-  | 'shell'
-  | 'whale'
-  | 'ray'
-  | 'octopus'
-  | 'pufferfish'
-  | 'jellyfish'
-  | 'seahorse'
-  | 'otter'
-  | 'orca';
+  // ocean
+  | 'turtle' | 'crab' | 'gull' | 'starfish' | 'dolphin' | 'seal' | 'shell'
+  | 'whale' | 'ray' | 'octopus' | 'pufferfish' | 'jellyfish' | 'seahorse' | 'otter' | 'orca'
+  // forest
+  | 'fox' | 'deer' | 'owl' | 'hedgehog';
 
 export type LitterKind =
-  | 'bottle' | 'bag' | 'can' | 'cup' | 'net' | 'straw' | 'ring' | 'tire' | 'mask';
+  | 'bottle' | 'bag' | 'can' | 'cup' | 'net' | 'straw' | 'ring' | 'tire' | 'mask'
+  | 'log' | 'snare';
 
 /** One restored stretch of coastline, authored by one player. */
 export interface Shore {
   id: string;
   /** Deterministic seed driving palette / layout / creature placement. */
   seed: number;
+  /** Which environment this stretch is. Ocean still uses `biome` for its 4 sub-looks. */
+  habitat: Habitat;
   biome: Biome;
   /** Pieces of litter that were cleared off it. */
   litter: number;

@@ -166,6 +166,10 @@ export const CREATURE_LABEL: Record<CreatureKind, string> = {
   seahorse: 'seahorse',
   otter: 'sea otter',
   orca: 'orca',
+  fox: 'fox',
+  deer: 'deer',
+  owl: 'owl',
+  hedgehog: 'hedgehog',
 };
 
 // Which sea creature is trapped in which piece of trash. Wipe the trash → free

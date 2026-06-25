@@ -3,7 +3,7 @@ import StampFrame from './StampFrame';
 import AuthorChip from './AuthorChip';
 import CreaturePortrait from './CreaturePortrait';
 import { IconArrowLeft, IconTrash, IconSend } from './icons';
-import { baseCreatures } from '../data/biomes';
+import { fallbackCreatures } from '../data/habitats';
 import type { CoastShore, CreatureKind } from '../types';
 import type { GuestMessage } from '@shared/social/guestbook';
 import { timeAgo } from '@shared/social/guestbook';
@@ -26,7 +26,7 @@ export default function Detail({ cs, myUserId, notes, onBack, onSendNote }: Prop
   // unique species with a count so each gets one premium close-up portrait
   const returnedRaw = cs.shore.rescued && cs.shore.rescued.length
     ? cs.shore.rescued
-    : baseCreatures(cs.shore.seed, cs.shore.biome);
+    : fallbackCreatures(cs.shore.habitat, cs.shore.seed);
   const counts = new Map<CreatureKind, number>();
   for (const k of returnedRaw) counts.set(k, (counts.get(k) || 0) + 1);
   const returned = [...counts.entries()];

@@ -10,6 +10,7 @@ import { useGuestbook } from '@shared/social/useGuestbook';
 import { threadFor } from '@shared/social/guestbook';
 import { telegramId, isInAigram } from '@shared/runtime';
 import { biomeFromSeed, unlockedRares } from './data/biomes';
+import { randomHabitat } from './data/habitats';
 import type { CoastShore, CreatureKind, Shore, TideSave } from './types';
 import { EMPTY_SAVE } from './types';
 import { playTap, unlockAudio, startAmbience, stopAmbience, setMuted } from './utils/sounds';
@@ -32,6 +33,7 @@ function freshShore(): Shore {
       }
     })(),
     seed,
+    habitat: randomHabitat(),
     biome: biomeFromSeed(seed),
     litter: 0,
     createdAt: Date.now(),
@@ -122,16 +124,19 @@ export default function TideLine() {
     playTap();
     unlockAudio();
     startAmbience();
-    // ambient sea life for this shore: each community-unlocked rare species has a
-    // chance to glide through (dolphin first, then whale, then manta ray)
+    const sh = freshShore();
+    // ambient is ocean-only sea life (dolphin/whale/ray/jellyfish/otter); other
+    // habitats get no ambient extras (their cast comes from rescues)
     const amb: CreatureKind[] = [];
-    const rares = unlockedRares(stats.totalLitter);
-    for (const sp of rares) if (Math.random() < 0.6) amb.push(sp);
-    if (amb.length === 0 && rares.includes('dolphin') && Math.random() < 0.5) amb.push('dolphin');
-    if (Math.random() < 0.35) amb.push('jellyfish'); // common drifter
-    if (Math.random() < 0.25) amb.push('otter'); // floats by now and then
+    if (sh.habitat === 'ocean') {
+      const rares = unlockedRares(stats.totalLitter);
+      for (const sp of rares) if (Math.random() < 0.6) amb.push(sp);
+      if (amb.length === 0 && rares.includes('dolphin') && Math.random() < 0.5) amb.push('dolphin');
+      if (Math.random() < 0.35) amb.push('jellyfish');
+      if (Math.random() < 0.25) amb.push('otter');
+    }
     setAmbient(amb);
-    setShore(freshShore());
+    setShore(sh);
     setScreen('beach');
   };
 

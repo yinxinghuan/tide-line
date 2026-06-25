@@ -1,7 +1,7 @@
 import ShoreCanvas from './ShoreCanvas';
 import type { CoastShore, CreatureKind } from '../types';
 import { specimenNo, shoreStyle, TOD } from '../utils/style';
-import { baseCreatures } from '../data/biomes';
+import { fallbackCreatures } from '../data/habitats';
 import { t } from '../i18n';
 
 interface Props {
@@ -58,14 +58,15 @@ export default function StampFrame({ cs, animated, compact, slam, extra = [] }: 
   const { shore } = cs;
   const style = shoreStyle(shore);
   const date = fmtDate(shore.createdAt);
-  const place = t('bio_' + shore.biome);
+  // caption: habitat name, with the ocean's sub-biome flavour appended
+  const place = shore.habitat === 'ocean' ? t('bio_' + shore.biome) : t('hab_' + shore.habitat);
   const tod = TOD[style.tod].label;
 
   // returning wildlife = what the player rescued this clean (old shores without
-  // a rescued list fall back to the seed-derived ambient set)
+  // a rescued list fall back to the habitat's set)
   const base = shore.rescued && shore.rescued.length
     ? shore.rescued
-    : baseCreatures(shore.seed, shore.biome);
+    : fallbackCreatures(shore.habitat, shore.seed);
   const creatures = [...base, ...extra].slice(0, 9);
 
   return (

@@ -69,6 +69,9 @@ const DICT: Record<string, [string, string, string, string]> = {
   alreadyBack: ['· {n} back', '· 已回归 {n}', '· {n} de vuelta', '· {n} de volta'],
   toGo: ['{n} more to go', '还差 {n} 件', 'faltan {n}', 'faltam {n}'],
   tapToClean: ['Tap to start cleaning', '点击开始清理', 'Toca para limpiar', 'Toque para limpar'],
+  // habitat display names (specimen-plate caption)
+  hab_ocean: ['Coast', '海岸', 'Costa', 'Costa'],
+  hab_forest: ['Forest', '森林', 'Bosque', 'Floresta'],
   // biome display names (specimen-plate caption)
   bio_tropical: ['Tropical Reef', '热带礁岸', 'Arrecife Tropical', 'Recife Tropical'],
   bio_cove: ['Quiet Cove', '静谧海湾', 'Cala Tranquila', 'Enseada Calma'],
@@ -90,6 +93,10 @@ const DICT: Record<string, [string, string, string, string]> = {
   seahorse: ['seahorse', '海马', 'caballito de mar', 'cavalo-marinho'],
   otter: ['sea otter', '海獭', 'nutria', 'lontra'],
   orca: ['orca', '虎鲸', 'orca', 'orca'],
+  fox: ['fox', '狐狸', 'zorro', 'raposa'],
+  deer: ['deer', '鹿', 'ciervo', 'veado'],
+  owl: ['owl', '猫头鹰', 'búho', 'coruja'],
+  hedgehog: ['hedgehog', '刺猬', 'erizo', 'ouriço'],
 };
 
 export function t(key: string, vars?: Vars): string {

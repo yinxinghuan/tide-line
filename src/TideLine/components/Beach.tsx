@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CreatureKind, LitterKind, Shore } from '../types';
-import { LITTER_TRAP } from '../data/biomes';
+import { threatKinds, trapFor } from '../data/habitats';
 import { drawEnvironment, placeCreatures, drawCreature, drawPaperGrain } from '../utils/scene';
-import { shoreStyle, litterSpots, LITTER_KINDS } from '../utils/style';
+import { shoreStyle, litterSpots } from '../utils/style';
 import { mulberry32, clamp, lerp } from '../utils/rng';
 import { playClear, playBloom, playRelease, unlockAudio, startAmbience } from '../utils/sounds';
 import { t } from '../i18n';
@@ -71,9 +71,10 @@ export default function Beach({ shore, ambient = [], onDone }: Props) {
     const style = shoreStyle(shore);
     const n = 8 + Math.floor(rand() * 7); // 8..14
     const spots = litterSpots(rand, n, style.litterLayout);
+    const tk = threatKinds(shore.habitat);
     const arr: Litter[] = spots.map(spot => {
-      const kind = LITTER_KINDS[Math.floor(rand() * LITTER_KINDS.length)];
-      const trapped = LITTER_TRAP[kind];
+      const kind = tk[Math.floor(rand() * tk.length)];
+      const trapped = trapFor(shore.habitat, kind);
       return {
         nx: spot.nx,
         ny: spot.ny,
@@ -585,6 +586,41 @@ function drawLitter(
         ctx.lineTo(s * 0.54, yy * s);
         ctx.stroke();
       }
+      break;
+    }
+    case 'log': {
+      // fallen log (forest) — heavy brown bar with a cut end
+      ctx.fillStyle = '#7a5a3a';
+      roundRect(ctx, -s * 0.95, -s * 0.22, s * 1.9, s * 0.44, s * 0.22);
+      ctx.fill();
+      ctx.fillStyle = '#9a7a52';
+      ctx.beginPath();
+      ctx.ellipse(s * 0.95, 0, s * 0.12, s * 0.22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#7a5a3a';
+      ctx.beginPath();
+      ctx.ellipse(s * 0.95, 0, s * 0.06, s * 0.11, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case 'snare': {
+      // poacher's snare — stake + wire noose
+      ctx.strokeStyle = '#7a6a4a';
+      ctx.lineWidth = s * 0.12;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, s * 0.5);
+      ctx.lineTo(0, -s * 0.6);
+      ctx.stroke();
+      ctx.strokeStyle = '#b6b6b6';
+      ctx.lineWidth = s * 0.06;
+      ctx.beginPath();
+      ctx.moveTo(0, -s * 0.6);
+      ctx.quadraticCurveTo(s * 0.6, -s * 0.4, s * 0.5, s * 0.1);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(s * 0.5, s * 0.32, s * 0.42, s * 0.24, 0, 0, Math.PI * 2);
+      ctx.stroke();
       break;
     }
   }
