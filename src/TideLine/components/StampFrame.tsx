@@ -59,7 +59,7 @@ export default function StampFrame({ cs, animated, compact, slam, extra = [] }: 
   const style = shoreStyle(shore);
   const date = fmtDate(shore.createdAt);
   // caption: habitat name, with the ocean's sub-biome flavour appended
-  const place = shore.habitat === 'ocean' ? t('bio_' + shore.biome) : t('hab_' + shore.habitat);
+  const place = (shore.habitat ?? 'ocean') === 'ocean' ? t('bio_' + shore.biome) : t('hab_' + shore.habitat);
   const tod = TOD[style.tod].label;
 
   // returning wildlife = what the player rescued this clean (old shores without

@@ -586,9 +586,10 @@ export function placeCreatures(
       // ONE big focal animal (the hero) + a clearly smaller supporting cast —
       // exaggerated size gap so the composition has a subject, not a uniform row.
       s = (i === 0 ? lerp(0.38, 0.46, rand()) : lerp(0.05, 0.16, depth)) * h;
-      const hd = HABITATS[shore.habitat];
-      const top = shore.habitat === 'ocean' ? wet - (h - wet) * 0.08 : h * hd.groundTop;
-      const bot = shore.habitat === 'ocean' ? h - (h - wet) * 0.02 : h * hd.groundBot;
+      const hab = shore.habitat ?? 'ocean'; // old shores predate habitats
+      const hd = HABITATS[hab] ?? HABITATS.ocean;
+      const top = hab === 'ocean' ? wet - (h - wet) * 0.08 : h * hd.groundTop;
+      const bot = hab === 'ocean' ? h - (h - wet) * 0.02 : h * hd.groundBot;
       y = top + (bot - top) * depth - s * 0.24;
       x = i === 0
         ? (heroSide + (rand() - 0.5) * 0.1) * w

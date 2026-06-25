@@ -64,19 +64,24 @@ export function randomHabitat(): Habitat {
   return ALL_HABITATS[Math.floor(Math.random() * ALL_HABITATS.length)];
 }
 
+/** Resolve a habitat, defaulting to ocean (old shores predate the field). */
+function defOf(habitat: Habitat | undefined): HabitatDef {
+  return (habitat && HABITATS[habitat]) || HABITATS.ocean;
+}
+
 /** Threat → trapped-creature lookup for a habitat (used when building a clean). */
-export function trapFor(habitat: Habitat, kind: LitterKind): CreatureKind | undefined {
-  return HABITATS[habitat].threats.find(t => t.kind === kind)?.traps;
+export function trapFor(habitat: Habitat | undefined, kind: LitterKind): CreatureKind | undefined {
+  return defOf(habitat).threats.find(t => t.kind === kind)?.traps;
 }
 
 /** The threat kinds that can appear in a habitat. */
-export function threatKinds(habitat: Habitat): LitterKind[] {
-  return HABITATS[habitat].threats.map(t => t.kind);
+export function threatKinds(habitat: Habitat | undefined): LitterKind[] {
+  return defOf(habitat).threats.map(t => t.kind);
 }
 
 /** Returning wildlife when a shore has no rescued list. */
-export function fallbackCreatures(habitat: Habitat, seed: number): CreatureKind[] {
-  const def = HABITATS[habitat];
+export function fallbackCreatures(habitat: Habitat | undefined, seed: number): CreatureKind[] {
+  const def = defOf(habitat);
   const r = mulberry32(seed ^ 0x1f1f);
   const n = 3 + Math.floor(r() * 3);
   const out: CreatureKind[] = [];
