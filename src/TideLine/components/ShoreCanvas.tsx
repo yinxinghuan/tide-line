@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { CreatureKind, Shore } from '../types';
-import { drawEnvironment, placeCreatures, drawCreature } from '../utils/scene';
+import { drawEnvironment, placeCreatures, drawCreature, drawPaperGrain } from '../utils/scene';
 
 interface Props {
   shore: Shore;
@@ -50,6 +50,7 @@ export default function ShoreCanvas({
     const drawFrame = (time: number) => {
       drawEnvironment(ctx, w, h, shore, { cleanliness, time, creatures: creatures.map(k => ({ kind: k })) });
       for (const p of placed()) drawCreature(ctx, p, time, 1);
+      drawPaperGrain(ctx, w, h);
     };
 
     resize();

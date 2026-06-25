@@ -78,6 +78,60 @@ function scallopBand(
   ctx.fill();
 }
 
+// ── paper grain overlay (printed-on-paper feel for the cut-paper art) ──
+let _paperTile: HTMLCanvasElement | null = null;
+function paperTile(): HTMLCanvasElement | null {
+  if (_paperTile) return _paperTile;
+  if (typeof document === 'undefined') return null;
+  const size = 300;
+  const cv = document.createElement('canvas');
+  cv.width = size;
+  cv.height = size;
+  const c = cv.getContext('2d');
+  if (!c) return null;
+  // neutral mid-grey base (soft-light no-op), then fine fibre noise around it
+  const img = c.createImageData(size, size);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = 128 + (Math.random() * 2 - 1) * 24;
+    d[i] = d[i + 1] = d[i + 2] = n;
+    d[i + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  // sparse dry-brush "飞白" streaks
+  for (let k = 0; k < 46; k++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const len = 16 + Math.random() * 130;
+    const light = Math.random() < 0.5;
+    c.strokeStyle = light ? 'rgba(255,255,255,0.45)' : 'rgba(40,40,40,0.4)';
+    c.lineWidth = 0.3 + Math.random() * 1.1;
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x + len, y + (Math.random() * 2 - 1) * 4);
+    c.stroke();
+  }
+  _paperTile = cv;
+  return cv;
+}
+
+/** Lay a subtle paper-fibre + dry-brush grain over the whole frame. Call LAST,
+ *  after creatures/props, so the entire image reads as printed on paper. */
+export function drawPaperGrain(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+  const tile = paperTile();
+  if (!tile) return;
+  const pat = ctx.createPattern(tile, 'repeat');
+  if (!pat) return;
+  ctx.save();
+  // 'overlay' reads on every tone (incl. saturated creatures), not just the
+  // big flat sky/sand areas the way 'soft-light' did.
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = 0.42;
+  ctx.fillStyle = pat;
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+}
+
 export function drawEnvironment(
   ctx: CanvasRenderingContext2D,
   w: number,

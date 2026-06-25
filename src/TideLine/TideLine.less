@@ -475,8 +475,8 @@
 
 // ── Stamp / specimen plate (skeuomorphic-frames: perforations bite the image) ──
 .tl-stamp {
-  --r: 7px; // hole radius
-  --s: 20px; // hole spacing
+  --r: 8.5px; // hole radius (tuned for the large detail stamp)
+  --s: 25px; // hole spacing
   position: relative;
 
   // the perforated stamp itself — one clean row of holes per edge via 4 edge
@@ -511,20 +511,20 @@
     z-index: 2;
     font-family: @display;
     font-weight: 600;
-    font-size: 25px;
+    font-size: 31px;
     letter-spacing: 1.5px;
     color: rgba(255, 255, 255, 0.92);
     pointer-events: none;
   }
   // postmark stamped across the top-right corner — the part that spills past the
-  // stamp is clipped by __paper's overflow:hidden + perforation mask
+  // stamp is clipped by __paper's overflow:hidden + perforation mask.
+  // width is a % of the stamp so it scales with the detail/grid size (no px cap).
   &__mark {
     position: absolute;
     top: -13%;
     right: -11%;
     z-index: 3;
-    width: 44%;
-    max-width: 122px;
+    width: 46%;
     aspect-ratio: 1;
     transform: rotate(-12deg);
     stroke: rgba(22, 38, 36, 0.6);

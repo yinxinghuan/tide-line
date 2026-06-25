@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CreatureKind, LitterKind, Shore } from '../types';
 import { LITTER_TRAP } from '../data/biomes';
-import { drawEnvironment, placeCreatures, drawCreature } from '../utils/scene';
+import { drawEnvironment, placeCreatures, drawCreature, drawPaperGrain } from '../utils/scene';
 import { shoreStyle, litterSpots, LITTER_KINDS } from '../utils/style';
 import { mulberry32, clamp, lerp } from '../utils/rng';
 import { playClear, playBloom, playRelease, unlockAudio, startAmbience } from '../utils/sounds';
@@ -243,6 +243,8 @@ export default function Beach({ shore, ambient = [], onDone }: Props) {
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, w, h);
       }
+
+      drawPaperGrain(ctx, w, h);
 
       raf = requestAnimationFrame(loop);
     };
