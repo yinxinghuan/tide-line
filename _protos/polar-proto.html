@@ -1,0 +1,85 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#0b1820}</style></head>
+<body><canvas id="c" width="900" height="720"></canvas>
+<script>
+const ctx=document.getElementById('c').getContext('2d'),W=900,H=720,TAU=Math.PI*2;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function circle(x,y,r,f){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=f;ctx.fill();}
+function rough(cx,cy,rx,ry,o,rng,fill){const N=o.n||32,macro=o.macro??0.07,rot=o.rot||0;const p1=rng()*TAU,p2=rng()*TAU,k1=2+((rng()*2)|0),k2=3+((rng()*3)|0);ctx.beginPath();for(let i=0;i<N;i++){const a=i/N*TAU+rot;const m=1+macro*Math.sin(a*k1+p1)+macro*0.55*Math.sin(a*k2+p2);const rr=o.roughFn?o.roughFn(a):(o.rough??0.04);const r=m*(1+(rng()*2-1)*rr);const x=cx+Math.cos(a)*rx*r,y=cy+Math.sin(a)*ry*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fillStyle=fill;ctx.fill();}
+const dn=a=>Math.max(0,Math.sin(a)),up=a=>Math.max(0,-Math.sin(a));
+function rlimb(x1,y1,x2,y2,w,rng,fill){const mx=(x1+x2)/2+(rng()*2-1)*w*1.1,my=(y1+y2)/2+(rng()*2-1)*w*1.1;const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(x1+nx*w,y1+ny*w);ctx.quadraticCurveTo(mx+nx*w*0.85,my+ny*w*0.85,x2+nx*w*0.4,y2+ny*w*0.4);ctx.lineTo(x2-nx*w*0.4,y2-ny*w*0.4);ctx.quadraticCurveTo(mx-nx*w*0.85,my-ny*w*0.85,x1-nx*w,y1-ny*w);ctx.closePath();ctx.fillStyle=fill;ctx.fill();}
+function eyeA(x,y,r){circle(x,y,r,'#1d2620');}
+function eyeC(x,y,r,rng){circle(x,y,r,'#1d2620');const fr=r*0.4;ctx.save();ctx.translate(x-r*0.2,y-r*0.2);ctx.rotate(rng()*TAU);ctx.beginPath();ctx.moveTo(-fr,0);ctx.lineTo(fr*0.4,-fr*0.8);ctx.lineTo(fr,fr*0.3);ctx.closePath();ctx.fillStyle='rgba(255,255,255,.85)';ctx.fill();ctx.restore();}
+function shadow(cx,cy,s){ctx.save();ctx.translate(cx,cy);ctx.scale(1,0.28);circle(0,s*0.7/0.28,s*0.85,'rgba(40,60,90,0.14)');ctx.restore();}
+
+// ── POLAR scene ──
+ctx.fillStyle='#aebfe0';ctx.fillRect(0,0,W,H*0.5);          // cold sky
+ctx.fillStyle='#cdd9ee';ctx.fillRect(0,H*0.34,W,H*0.16);
+// aurora wash
+ctx.save();ctx.globalAlpha=0.35;const ag=ctx.createLinearGradient(0,0,0,H*0.4);ag.addColorStop(0,'rgba(90,220,180,0)');ag.addColorStop(1,'rgba(90,220,180,0.6)');ctx.fillStyle=ag;ctx.beginPath();ctx.moveTo(0,H*0.1);for(let x=0;x<=W;x+=30)ctx.lineTo(x,H*0.1+Math.sin(x*0.02)*30);ctx.lineTo(W,H*0.42);ctx.lineTo(0,H*0.42);ctx.closePath();ctx.fill();ctx.restore();
+circle(W*0.22,H*0.2,46,'#eef3fb'); // pale sun
+// far ice ridge
+ctx.fillStyle='#c2d2e2';ctx.beginPath();ctx.moveTo(0,H*0.5);for(let x=0;x<=W;x+=70){ctx.lineTo(x+35,H*0.5-30-Math.random()*0);ctx.lineTo(x+70,H*0.5);}ctx.lineTo(W,H*0.56);ctx.lineTo(0,H*0.56);ctx.closePath();ctx.fill();
+// cold water
+ctx.fillStyle='#4a7a9a';ctx.fillRect(0,H*0.54,W,H*0.16);
+// ice floe (foreground ground)
+ctx.fillStyle='#eaf1f6';ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,H*0.7);ctx.lineTo(W*0.28,H*0.66);ctx.lineTo(W*0.62,H*0.7);ctx.lineTo(W,H*0.67);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+ctx.fillStyle='#d6e2ec';ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,H*0.86);ctx.lineTo(W,H*0.9);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+// iceberg
+rough(W*0.9,H*0.56,70,46,{n:12,macro:0.18,rough:0.06,roughFn:a=>up(a)*0.25+0.02},mulberry32(9),'#cfe0ea');
+
+// threat: oil slick on the ice/water
+function oil(x,y,s,seed){const r=mulberry32(seed);rough(x,y,s,s*0.5,{n:20,macro:0.22,rough:0.1},r,'rgba(28,26,38,0.82)');rough(x,y,s*0.6,s*0.3,{n:14,macro:0.2,rough:0.1},r,'rgba(70,60,90,0.7)');}
+
+// ── polar animals ──
+function polarbear(cx,cy,s,seed){const r=mulberry32(seed);const w='#f0f3f1',sh='#dde6e6';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  for(const dx of[-0.45,-0.15,0.2,0.5])rlimb(s*dx,s*0.3,s*dx,s*1.0,s*0.16,r,w);
+  rough(0,0,s*0.86,s*0.6,{n:30,macro:0.07,roughFn:a=>0.015+0.04*dn(a)},r,w); // body
+  rough(s*0.72,-s*0.3,s*0.42,s*0.4,{n:22,macro:0.09,rough:0.06},r,w); // head
+  circle(s*0.55,-s*0.62,s*0.12,w);circle(s*0.9,-s*0.6,s*0.12,w); // ears
+  circle(s*0.95,-s*0.28,s*0.07,'#23282c'); // nose
+  eyeC(s*0.66,-s*0.34,s*0.055,r);eyeC(s*0.86,-s*0.32,s*0.05,r);ctx.restore();}
+function penguin(cx,cy,s,seed){const r=mulberry32(seed);const k='#2b2f36',w='#f2f4f4',o='#e8902c';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  rough(0,s*0.05,s*0.5,s*0.66,{n:26,macro:0.07,roughFn:a=>0.015+0.05*dn(a)},r,k); // body
+  rough(0,s*0.12,s*0.32,s*0.5,{n:20,macro:0.1,rough:0.05},r,w); // belly
+  rough(0,-s*0.55,s*0.3,s*0.3,{n:18,macro:0.1,rough:0.06},r,k); // head
+  // beak
+  ctx.fillStyle=o;ctx.beginPath();ctx.moveTo(-s*0.04,-s*0.5);ctx.lineTo(-s*0.34,-s*0.44);ctx.lineTo(-s*0.04,-s*0.36);ctx.closePath();ctx.fill();
+  // feet
+  ctx.fillStyle=o;for(const sg of[-1,1]){ctx.beginPath();ctx.ellipse(sg*s*0.18,s*0.66,s*0.14,s*0.07,0,0,TAU);ctx.fill();}
+  // flipper
+  rough(-s*0.45,s*0.05,s*0.12,s*0.34,{n:12,macro:0.16,rough:0.08,rot:0.3},r,k);
+  eyeC(-s*0.12,-s*0.58,s*0.06,r);ctx.restore();}
+function walrus(cx,cy,s,seed){const r=mulberry32(seed);const b='#9a7e64',l='#b39a80';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  rough(0,s*0.1,s*0.92,s*0.56,{n:30,macro:0.08,roughFn:a=>0.015+0.05*dn(a)},r,b); // blubbery body
+  rough(-s*0.7,-s*0.25,s*0.42,s*0.4,{n:22,macro:0.09,rough:0.06},r,l); // head
+  // snout
+  rough(-s*0.95,-s*0.05,s*0.26,s*0.22,{n:14,macro:0.1,rough:0.06},r,l);
+  // tusks
+  ctx.strokeStyle='#f0ead8';ctx.lineWidth=s*0.07;ctx.lineCap='round';for(const dx of[-0.04,0.06]){ctx.beginPath();ctx.moveTo(s*(-0.95+dx),s*0.05);ctx.lineTo(s*(-0.95+dx),s*0.4);ctx.stroke();}
+  // whiskers
+  ctx.strokeStyle='rgba(60,45,30,0.6)';ctx.lineWidth=s*0.02;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(-s*0.95,s*0.0+i*s*0.05);ctx.lineTo(-s*1.2,s*0.0+i*s*0.08);ctx.stroke();}
+  // rear flipper
+  rough(s*0.8,s*0.3,s*0.24,s*0.16,{n:12,macro:0.14,rough:0.07},r,b);
+  circle(-s*1.0,-s*0.1,s*0.05,'#2a1d16');
+  eyeA(-s*0.74,-s*0.28,s*0.06);ctx.restore();}
+function arcticfox(cx,cy,s,seed){const r=mulberry32(seed);const w='#eef2f1',sh='#d6e0e0';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  rlimb(-s*0.35,s*0.3,-s*0.4,s*0.9,s*0.1,r,sh);rlimb(s*0.35,s*0.3,s*0.4,s*0.9,s*0.1,r,sh);
+  rough(-s*0.9,s*0.05,s*0.46,s*0.32,{n:18,macro:0.2,rough:0.12},r,w); // bushy tail
+  rough(0,s*0.1,s*0.58,s*0.5,{n:28,macro:0.1,roughFn:a=>0.02+0.05*dn(a)},r,w); // body
+  rough(s*0.12,-s*0.5,s*0.42,s*0.4,{n:22,macro:0.12,rough:0.07},r,w); // head
+  ctx.fillStyle=w;ctx.beginPath();ctx.moveTo(s*0.0,-s*0.82);ctx.lineTo(-s*0.18,-s*1.25);ctx.lineTo(-s*0.3,-s*0.72);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(s*0.34,-s*0.78);ctx.lineTo(s*0.5,-s*1.2);ctx.lineTo(s*0.54,-s*0.66);ctx.closePath();ctx.fill();
+  circle(s*0.42,-s*0.36,s*0.05,'#23282c'); // nose
+  eyeC(s*0.0,-s*0.5,s*0.06,r);eyeC(s*0.26,-s*0.47,s*0.055,r);ctx.restore();}
+
+// place
+oil(W*0.5,H*0.92,130,3);
+walrus(W*0.7,H*0.66,118,201);
+polarbear(W*0.36,H*0.74,150,7);
+arcticfox(W*0.16,H*0.84,80,33);
+penguin(W*0.86,H*0.82,66,55);
+
+// paper grain
+const t=document.createElement('canvas');t.width=t.height=300;const tc=t.getContext('2d');const im=tc.createImageData(300,300);for(let i=0;i<im.data.length;i+=4){const n=128+(Math.random()*2-1)*24;im.data[i]=im.data[i+1]=im.data[i+2]=n;im.data[i+3]=255;}tc.putImageData(im,0,0);
+ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=0.4;ctx.fillStyle=ctx.createPattern(t,'repeat');ctx.fillRect(0,0,W,H);ctx.restore();
+ctx.fillStyle='rgba(30,40,70,.92)';ctx.font='800 40px Georgia,serif';ctx.fillText('WILD LINE',26,52);ctx.font='600 22px Helvetica';ctx.fillStyle='rgba(30,40,70,.7)';ctx.fillText('· POLAR',232,50);
+</script></body></html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#0b1820}</style></head>
+<body><canvas id="c" width="900" height="720"></canvas>
+<script>
+const ctx=document.getElementById('c').getContext('2d'),W=900,H=720,TAU=Math.PI*2;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function circle(x,y,r,f){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=f;ctx.fill();}
+function rough(cx,cy,rx,ry,o,rng,fill){const N=o.n||32,macro=o.macro??0.07,rot=o.rot||0;const p1=rng()*TAU,p2=rng()*TAU,k1=2+((rng()*2)|0),k2=3+((rng()*3)|0);ctx.beginPath();for(let i=0;i<N;i++){const a=i/N*TAU+rot;const m=1+macro*Math.sin(a*k1+p1)+macro*0.55*Math.sin(a*k2+p2);const rr=o.roughFn?o.roughFn(a):(o.rough??0.04);const r=m*(1+(rng()*2-1)*rr);const x=cx+Math.cos(a)*rx*r,y=cy+Math.sin(a)*ry*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fillStyle=fill;ctx.fill();}
+const dn=a=>Math.max(0,Math.sin(a)),up=a=>Math.max(0,-Math.sin(a));
+function rlimb(x1,y1,x2,y2,w,rng,fill){const mx=(x1+x2)/2+(rng()*2-1)*w*1.1,my=(y1+y2)/2+(rng()*2-1)*w*1.1;const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(x1+nx*w,y1+ny*w);ctx.quadraticCurveTo(mx+nx*w*0.85,my+ny*w*0.85,x2+nx*w*0.4,y2+ny*w*0.4);ctx.lineTo(x2-nx*w*0.4,y2-ny*w*0.4);ctx.quadraticCurveTo(mx-nx*w*0.85,my-ny*w*0.85,x1-nx*w,y1-ny*w);ctx.closePath();ctx.fillStyle=fill;ctx.fill();}
+function eyeA(x,y,r){circle(x,y,r,'#1d2620');}
+function eyeB(x,y,r,rng){rough(x,y,r*1.55,r*1.5,{n:11,macro:0.18,rough:0.14},rng,'#f5f3ea');circle(x+1,y+1,r*0.78,'#1d2620');}
+function eyeC(x,y,r,rng){circle(x,y,r,'#1d2620');const fr=r*0.4,fa=-2;ctx.save();ctx.translate(x+Math.cos(fa)*r*0.4,y+Math.sin(fa)*r*0.4);ctx.rotate(rng()*TAU);ctx.beginPath();ctx.moveTo(-fr,0);ctx.lineTo(fr*0.4,-fr*0.8);ctx.lineTo(fr,fr*0.3);ctx.closePath();ctx.fillStyle='rgba(255,255,255,.85)';ctx.fill();ctx.restore();}
+function shadow(cx,cy,s){ctx.save();ctx.translate(cx,cy);ctx.scale(1,0.3);circle(0,s*0.6/0.3,s*0.8,'rgba(0,0,0,0.14)');ctx.restore();}
+
+// ── FOREST scene ──
+// sky
+ctx.fillStyle='#dfe9c8';ctx.fillRect(0,0,W,H*0.46);
+ctx.fillStyle='#eef2d8';ctx.fillRect(0,H*0.3,W,H*0.16);
+circle(W*0.78,H*0.16,70,'#f6e7a8'); // soft sun
+// far treeline (two rough rows)
+function treeline(baseY,h,fill,seed){const r=mulberry32(seed);ctx.fillStyle=fill;let x=-30;while(x<W+30){const tw=40+r()*60,th=h*(0.7+r()*0.7);rough(x,baseY,tw*0.6,th,{n:14,macro:0.12,roughFn:a=>up(a)*0.18+0.02},r,fill);x+=tw*0.9;}ctx.fillRect(0,baseY,W,H*0.5-baseY);}
+treeline(H*0.44,90,'#5a7d4a',11);
+treeline(H*0.5,120,'#3f6238',12);
+// forest floor
+ctx.fillStyle='#7a6a44';ctx.fillRect(0,H*0.6,W,H*0.4);
+ctx.fillStyle='#6a5c3a';ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,H*0.84);ctx.lineTo(W,H*0.88);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+// foreground tree trunks + canopy (frame the sides)
+function tree(x,seed){const r=mulberry32(seed);ctx.strokeStyle='#5a3f28';ctx.lineWidth=46;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,H*0.66);ctx.quadraticCurveTo(x+10,H*0.3,x-6,-20);ctx.stroke();rough(x-6,-10,150,150,{n:20,macro:0.16,rough:0.1},r,'#3f6238');rough(x+60,90,110,110,{n:16,macro:0.18,rough:0.1},r,'#4a7048');}
+tree(70,21);tree(W-60,22);
+
+// threat: fallen log trapping a rabbit
+function log(x,y,len,seed){const r=mulberry32(seed);ctx.save();ctx.translate(x,y);ctx.rotate(-0.18);ctx.strokeStyle='#7a5a3a';ctx.lineWidth=44;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-len/2,0);ctx.lineTo(len/2,0);ctx.stroke();circle(len/2,0,22,'#9a7a52');circle(len/2,0,11,'#7a5a3a');ctx.restore();}
+
+// ── forest animals (hand-drawn) ──
+function fox(cx,cy,s,seed){const r=mulberry32(seed);const o='#e07a3a',d='#c75f28',w='#f3ece0';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  rlimb(-s*0.4,s*0.3,-s*0.45,s*0.95,s*0.12,r,d);rlimb(s*0.4,s*0.3,s*0.45,s*0.95,s*0.12,r,d);
+  // bushy tail
+  rough(-s*0.95,s*0.1,s*0.5,s*0.34,{n:18,macro:0.2,rough:0.12},r,o);rough(-s*1.2,s*0.05,s*0.2,s*0.2,{n:12,macro:0.2,rough:0.12},r,w);
+  rough(0,s*0.1,s*0.62,s*0.56,{n:30,macro:0.1,roughFn:a=>0.02+0.05*dn(a)},r,o); // body
+  rough(s*0.1,-s*0.55,s*0.46,s*0.44,{n:22,macro:0.12,rough:0.07},r,o); // head
+  // ears
+  ctx.fillStyle=o;ctx.beginPath();ctx.moveTo(s*0.0,-s*0.9);ctx.lineTo(-s*0.22,-s*1.35);ctx.lineTo(-s*0.32,-s*0.78);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(s*0.34,-s*0.85);ctx.lineTo(s*0.5,-s*1.3);ctx.lineTo(s*0.56,-s*0.7);ctx.closePath();ctx.fill();
+  // snout white
+  rough(s*0.25,-s*0.4,s*0.26,s*0.24,{n:14,macro:0.14,rough:0.08},r,w);
+  circle(s*0.46,-s*0.4,s*0.06,'#2a1d16'); // nose
+  eyeC(s*0.0,-s*0.55,s*0.07,r);eyeC(s*0.28,-s*0.52,s*0.065,r);ctx.restore();
+}
+function deer(cx,cy,s,seed){const r=mulberry32(seed);const b='#b07a4a',l='#caa276';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  rlimb(-s*0.4,s*0.2,-s*0.5,s*1.05,s*0.1,r,b);rlimb(-s*0.05,s*0.25,-s*0.05,s*1.1,s*0.1,r,b);rlimb(s*0.4,s*0.2,s*0.52,s*1.05,s*0.1,r,b);rlimb(s*0.1,s*0.25,s*0.12,s*1.1,s*0.1,r,b);
+  rough(0,0,s*0.66,s*0.46,{n:28,macro:0.1,roughFn:a=>0.02+0.05*dn(a)},r,b); // body
+  // neck + head up-right
+  rlimb(s*0.4,-s*0.1,s*0.7,-s*0.7,s*0.16,r,b);
+  rough(s*0.78,-s*0.85,s*0.28,s*0.34,{n:18,macro:0.12,rough:0.07},r,l); // head
+  ctx.fillStyle=b;ctx.beginPath();ctx.moveTo(s*0.66,-s*1.05);ctx.lineTo(s*0.6,-s*1.45);ctx.lineTo(s*0.78,-s*1.12);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(s*0.95,-s*1.05);ctx.lineTo(s*1.05,-s*1.4);ctx.lineTo(s*0.9,-s*1.12);ctx.closePath();ctx.fill();
+  // ears
+  rough(s*0.62,-s*0.82,s*0.1,s*0.18,{n:10,macro:0.2,rough:0.1,rot:-0.4},r,l);rough(s*0.98,-s*0.8,s*0.1,s*0.18,{n:10,macro:0.2,rough:0.1,rot:0.4},r,l);
+  circle(s*1.02,-s*0.78,s*0.05,'#2a1d16');
+  eyeA(s*0.84,-s*0.86,s*0.06);ctx.restore();
+}
+function owl(cx,cy,s,seed){const r=mulberry32(seed);const b='#8a6e52',l='#b39a78';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  rough(0,0,s*0.6,s*0.74,{n:26,macro:0.08,roughFn:a=>0.02+0.05*dn(a)},r,b); // body
+  rough(0,s*0.1,s*0.42,s*0.5,{n:20,macro:0.1,rough:0.06},r,l); // belly
+  // ear tufts
+  ctx.fillStyle=b;ctx.beginPath();ctx.moveTo(-s*0.3,-s*0.6);ctx.lineTo(-s*0.5,-s*1.0);ctx.lineTo(-s*0.12,-s*0.66);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(s*0.3,-s*0.6);ctx.lineTo(s*0.5,-s*1.0);ctx.lineTo(s*0.12,-s*0.66);ctx.closePath();ctx.fill();
+  eyeB(-s*0.24,-s*0.3,s*0.16,r);eyeB(s*0.24,-s*0.3,s*0.16,r);
+  ctx.fillStyle='#f5a23c';ctx.beginPath();ctx.moveTo(-s*0.08,-s*0.12);ctx.lineTo(s*0.08,-s*0.12);ctx.lineTo(0,s*0.06);ctx.closePath();ctx.fill();
+  // feet
+  ctx.strokeStyle='#f5a23c';ctx.lineWidth=s*0.07;ctx.lineCap='round';for(const sg of[-1,1]){ctx.beginPath();ctx.moveTo(sg*s*0.16,s*0.66);ctx.lineTo(sg*s*0.16,s*0.84);ctx.stroke();}ctx.restore();
+}
+function hedgehog(cx,cy,s,seed){const r=mulberry32(seed);const sp='#6a4f36',f='#caa276';shadow(cx,cy,s);ctx.save();ctx.translate(cx,cy);
+  // spiky back
+  ctx.fillStyle=sp;for(let i=0;i<22;i++){const a=Math.PI+ (i/21)*Math.PI;const rr=s*0.7;ctx.beginPath();ctx.moveTo(Math.cos(a-0.06)*rr*0.85,Math.sin(a-0.06)*rr*0.85);ctx.lineTo(Math.cos(a)*rr*1.25,Math.sin(a)*rr*1.25);ctx.lineTo(Math.cos(a+0.06)*rr*0.85,Math.sin(a+0.06)*rr*0.85);ctx.closePath();ctx.fill();}
+  rough(0,0,s*0.68,s*0.56,{n:24,macro:0.08,roughFn:a=>up(a)*0.08+0.02},r,sp);
+  // face
+  rough(s*0.5,s*0.12,s*0.3,s*0.26,{n:14,macro:0.12,rough:0.07},r,f);
+  circle(s*0.78,s*0.12,s*0.06,'#2a1d16');
+  eyeA(s*0.5,s*0.02,s*0.06);
+  // feet
+  for(const dx of[-0.3,0.1])rough(s*dx,s*0.5,s*0.1,s*0.07,{n:8,rough:0.1},r,f);ctx.restore();
+}
+
+// place scene props + animals
+const calls=[['log',()=>log(W*0.3,H*0.86,200,77)],['deer',()=>deer(W*0.62,H*0.66,120,201)],['fox',()=>fox(W*0.34,H*0.8,118,7)],['owl',()=>owl(W*0.8,H*0.74,84,55)],['hedgehog',()=>hedgehog(W*0.14,H*0.86,80,91)]];let ERR='';for(const[nm,fn] of calls){try{fn();}catch(e){ERR+=nm+': '+e.message+'  ';}}if(ERR){ctx.fillStyle='red';ctx.font='20px monospace';ctx.fillText(ERR,20,700);}
+
+// paper grain
+const t=document.createElement('canvas');t.width=t.height=300;const tc=t.getContext('2d');const im=tc.createImageData(300,300);for(let i=0;i<im.data.length;i+=4){const n=128+(Math.random()*2-1)*24;im.data[i]=im.data[i+1]=im.data[i+2]=n;im.data[i+3]=255;}tc.putImageData(im,0,0);
+ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=0.4;ctx.fillStyle=ctx.createPattern(t,'repeat');ctx.fillRect(0,0,W,H);ctx.restore();
+// label
+ctx.fillStyle='rgba(255,255,255,.95)';ctx.font='800 40px Georgia,serif';ctx.fillText('WILD LINE',26,52);ctx.font='600 22px Helvetica';ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillText('· FOREST',230,50);
+</script></body></html>
