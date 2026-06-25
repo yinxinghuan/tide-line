@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import StampFrame from './StampFrame';
 import AuthorChip from './AuthorChip';
-import CreatureIcon from './CreatureIcon';
+import CreaturePortrait from './CreaturePortrait';
 import { IconArrowLeft, IconTrash, IconSend } from './icons';
 import { baseCreatures } from '../data/biomes';
-import type { CoastShore } from '../types';
+import type { CoastShore, CreatureKind } from '../types';
 import type { GuestMessage } from '@shared/social/guestbook';
 import { timeAgo } from '@shared/social/guestbook';
 import { t, getLang } from '../i18n';
@@ -22,11 +22,14 @@ export default function Detail({ cs, myUserId, notes, onBack, onSendNote }: Prop
   const isSelf = cs.authorId === myUserId;
   const lang = getLang();
 
-  // wildlife that returned to this shore (what the author rescued)
-  const returned = (cs.shore.rescued && cs.shore.rescued.length
+  // wildlife that returned to this shore (what the author rescued), deduped to
+  // unique species with a count so each gets one premium close-up portrait
+  const returnedRaw = cs.shore.rescued && cs.shore.rescued.length
     ? cs.shore.rescued
-    : baseCreatures(cs.shore.seed, cs.shore.biome)
-  ).slice(0, 10);
+    : baseCreatures(cs.shore.seed, cs.shore.biome);
+  const counts = new Map<CreatureKind, number>();
+  for (const k of returnedRaw) counts.set(k, (counts.get(k) || 0) + 1);
+  const returned = [...counts.entries()];
 
   const send = () => {
     const v = text.trim();
@@ -60,13 +63,13 @@ export default function Detail({ cs, myUserId, notes, onBack, onSendNote }: Prop
           </span>
         </div>
 
-        {/* wildlife that returned (read-only) */}
+        {/* wildlife that returned — premium close-up portrait gallery */}
         {returned.length > 0 && (
           <div className="tl-section">
             <div className="tl-section__title">{t('wildlifeReturned')}</div>
-            <div className="tl-peek tl-peek--static">
-              {returned.map((k, i) => (
-                <CreatureIcon key={i} kind={k} size={28} />
+            <div className="tl-folio">
+              {returned.map(([k, n]) => (
+                <CreaturePortrait key={k} kind={k} count={n} />
               ))}
             </div>
           </div>

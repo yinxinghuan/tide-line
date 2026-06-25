@@ -63,6 +63,7 @@ const DICT: Record<string, [string, string, string, string]> = {
   back: ['Back', '返回', 'Atrás', 'Voltar'],
   rescuedN: ['{n} animals freed', '解救了 {n} 只生灵', '{n} animales liberados', '{n} animais libertados'],
   freed: ['Freed!', '获救！', '¡Libre!', 'Livre!'],
+  communityGoal: ['COMMUNITY GOAL', '社区共建目标', 'META COMÚN', 'META COMUNITÁRIA'],
   rareGoal: ['Together, bring back the {name}', '齐心让{name}回归', 'Juntos, traer al {name}', 'Juntos, trazer o {name}'],
   allBack: ['All the rare ones are back!', '稀有生灵都回来了！', '¡Todos han vuelto!', 'Todos voltaram!'],
   alreadyBack: ['· {n} back', '· 已回归 {n}', '· {n} de vuelta', '· {n} de volta'],

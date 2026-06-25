@@ -2,6 +2,7 @@ import { useState } from 'react';
 import StampFrame from './StampFrame';
 import AuthorChip from './AuthorChip';
 import CreatureIcon from './CreatureIcon';
+import CreaturePortrait from './CreaturePortrait';
 import BottomSheet from './BottomSheet';
 import { IconTrophy, IconTrash, IconSparkle } from './icons';
 import { MILESTONES, nextMilestone, unlockedRares } from '../data/biomes';
@@ -68,11 +69,11 @@ export default function Coast({
           if (!next) {
             return (
               <div className="tl-goal tl-goal--done">
-                <div className="tl-goal__icon"><CreatureIcon kind="whale" size={34} /></div>
+                <CreaturePortrait kind="whale" mini />
                 <div className="tl-goal__body">
                   <div className="tl-goal__title">{t('allBack')}</div>
                   <div className="tl-goal__chips">
-                    {MILESTONES.map(m => <CreatureIcon key={m.species} kind={m.species} size={26} />)}
+                    {MILESTONES.map(m => <CreatureIcon key={m.species} kind={m.species} size={24} />)}
                   </div>
                 </div>
               </div>
@@ -83,8 +84,9 @@ export default function Coast({
           const left = Math.max(0, next.litter - stats.totalLitter);
           return (
             <div className="tl-goal">
-              <div className="tl-goal__icon"><CreatureIcon kind={next.species} size={34} /></div>
+              <CreaturePortrait kind={next.species} mini />
               <div className="tl-goal__body">
+                <div className="tl-goal__eyebrow">{t('communityGoal')}</div>
                 <div className="tl-goal__title">{t('rareGoal', { name: t(next.species) })}</div>
                 <div className="tl-goal__track">
                   <div className="tl-goal__fill" style={{ width: `${pct * 100}%` }} />

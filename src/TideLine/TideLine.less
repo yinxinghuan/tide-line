@@ -993,6 +993,14 @@
     flex: 1;
     min-width: 0;
   }
+  &__eyebrow {
+    font-family: @mono;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: @teal;
+    margin-bottom: 4px;
+  }
   &__title {
     font-size: 13px;
     font-weight: 700;
@@ -1031,10 +1039,77 @@
   }
 }
 
-// Detail: read-only wildlife row + bottom compose bar
-.tl-peek--static {
-  cursor: default;
+// Detail: returned-wildlife close-up portrait gallery
+.tl-folio {
+  display: flex;
+  gap: 11px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 8px;
+  scroll-snap-type: x proximity;
+  &::-webkit-scrollbar { height: 0; }
 }
+.tl-portrait.tl-portrait--mini {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+}
+.tl-portrait {
+  position: relative;
+  flex: 0 0 auto;
+  width: 116px;
+  height: 138px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: @bg2;
+  border: 1px solid rgba(52, 214, 196, 0.28);
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  scroll-snap-align: start;
+  &__cv {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  &__name {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px 8px 7px;
+    font-family: @mono;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    text-align: center;
+    color: #eaf6f3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: linear-gradient(180deg, transparent, rgba(3, 14, 19, 0.82) 62%);
+  }
+  &__count {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-family: @mono;
+    font-size: 12px;
+    font-weight: 700;
+    color: @ink;
+    background: @warm;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+}
+
+// Detail: bottom compose bar
 .tl-compose--bar {
   margin-top: 0;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
