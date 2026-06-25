@@ -39,12 +39,12 @@ function Postmark({ mon, day }: { mon: string; day: string }) {
       <circle cx="50" cy="50" r="46" fill="none" strokeWidth="3.2" />
       <text className="tl-stamp__mark-arc">
         <textPath href="#tl-arc-top" startOffset="50%" textAnchor="middle">
-          · TIDE LINE ·
+          · WILD LINE ·
         </textPath>
       </text>
       <text className="tl-stamp__mark-arc">
         <textPath href="#tl-arc-bot" startOffset="50%" textAnchor="middle">
-          COASTAL TRUST
+          WILDLIFE TRUST
         </textPath>
       </text>
       <text x="50" y="52" textAnchor="middle" className="tl-stamp__mark-day">{day}</text>
@@ -75,7 +75,7 @@ export default function StampFrame({ cs, animated, compact, slam, extra = [] }: 
           The postmark lives INSIDE so the part that spills past the edge is clipped. */}
       <div className="tl-stamp__paper">
         <ShoreCanvas shore={shore} creatures={creatures} animated={animated} />
-        <span className="tl-stamp__issue">TIDE LINE</span>
+        <span className="tl-stamp__issue">WILD LINE</span>
         <Postmark mon={date.mon} day={date.day} />
       </div>
 
