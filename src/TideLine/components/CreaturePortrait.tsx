@@ -28,14 +28,15 @@ export default function CreaturePortrait({ kind, count = 1, mini = false }: Prop
     const s0 = SCALE[kind] ?? 0.46;
 
     if (mini) {
-      // transparent canvas — creature only, drawn big & high so its head pokes
-      // out above the folder card behind it
+      // transparent canvas — creature sits INSIDE the folder card (drawn over the
+      // lower ~2/3) with only the top poking above the card edge. A resting pose
+      // (time 0, phase -π/2 → leap/breach ≈ 0) keeps sea creatures from floating.
       const W = 80, H = 98;
       cv.width = Math.round(W * dpr);
       cv.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      drawCreature(ctx, { kind, x: W / 2, y: H * 0.66, s: H * (s0 + 0.02), phase: 0 }, 0.5, 1, true);
+      drawCreature(ctx, { kind, x: W / 2, y: H * 0.6, s: H * (s0 + 0.08), phase: -Math.PI / 2 }, 0, 1, false);
       return;
     }
 

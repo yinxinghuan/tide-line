@@ -44,12 +44,6 @@ function circle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, 
   ctx.fillStyle = fill;
   ctx.fill();
 }
-function ellipse(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number, fill: string) {
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-}
 
 /** A flat band whose TOP edge is a row of cut-paper scallops (rounded bumps). */
 function scallopBand(
@@ -523,124 +517,180 @@ export function drawCreature(
 
   if (shadow && !SEA_KINDS.includes(p.kind)) softShadow(ctx, p.s * 1.1, 0.3);
 
+  // stable per-creature rng (seeded from phase) so the hand-drawn irregularity is
+  // fixed — recomputed identically every frame, never shimmers
+  const rng = mulberry32((Math.floor(p.phase * 100000) >>> 0) ^ 0x9e3779b9);
+  const t = time;
+  const ph = p.phase;
   switch (p.kind) {
-    case 'turtle': turtle(ctx, p.s, time, p.phase); break;
-    case 'crab': crab(ctx, p.s, time, p.phase); break;
-    case 'gull': gull(ctx, p.s, time, p.phase); break;
-    case 'starfish': starfish(ctx, p.s); break;
-    case 'dolphin': dolphin(ctx, p.s, time, p.phase); break;
-    case 'seal': seal(ctx, p.s, time, p.phase); break;
-    case 'shell': shell(ctx, p.s); break;
-    case 'whale': whale(ctx, p.s, time, p.phase); break;
-    case 'ray': ray(ctx, p.s, time, p.phase); break;
-    case 'octopus': octopus(ctx, p.s, time, p.phase); break;
-    case 'pufferfish': pufferfish(ctx, p.s, time, p.phase); break;
-    case 'jellyfish': jellyfish(ctx, p.s, time, p.phase); break;
-    case 'seahorse': seahorse(ctx, p.s, time, p.phase); break;
-    case 'otter': otter(ctx, p.s, time, p.phase); break;
-    case 'orca': orca(ctx, p.s, time, p.phase); break;
+    case 'turtle': turtle(ctx, p.s, t, ph, rng); break;
+    case 'crab': crab(ctx, p.s, t, ph, rng); break;
+    case 'gull': gull(ctx, p.s, t, ph, rng); break;
+    case 'starfish': starfish(ctx, p.s, rng); break;
+    case 'dolphin': dolphin(ctx, p.s, t, ph, rng); break;
+    case 'seal': seal(ctx, p.s, t, ph, rng); break;
+    case 'shell': shell(ctx, p.s, rng); break;
+    case 'whale': whale(ctx, p.s, t, ph, rng); break;
+    case 'ray': ray(ctx, p.s, t, ph, rng); break;
+    case 'octopus': octopus(ctx, p.s, t, ph, rng); break;
+    case 'pufferfish': pufferfish(ctx, p.s, t, ph, rng); break;
+    case 'jellyfish': jellyfish(ctx, p.s, t, ph, rng); break;
+    case 'seahorse': seahorse(ctx, p.s, t, ph, rng); break;
+    case 'otter': otter(ctx, p.s, t, ph, rng); break;
+    case 'orca': orca(ctx, p.s, t, ph, rng); break;
   }
   ctx.restore();
 }
 
-/** A simple cut-paper eye: dark dot + tiny catch-light. */
-function eye(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
-  circle(ctx, x, y, r, '#1d2a28');
-  circle(ctx, x + r * 0.32, y - r * 0.32, r * 0.34, 'rgba(255,255,255,0.9)');
+// ─── hand-drawn helpers ─────────────────────────────────────────────────────
+
+type RoughOpts = { n?: number; macro?: number; rot?: number; rough?: number; roughFn?: (a: number) => number };
+
+/** Hand-drawn rough silhouette. macro = wonky lobes, roughFn(angle) = per-region
+ *  brushy edge so roughness follows the animal's features, not evenly all around. */
+function rough(
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number,
+  o: RoughOpts, rng: () => number, fill: string,
+) {
+  const N = o.n ?? 32, macro = o.macro ?? 0.07, rot = o.rot ?? 0;
+  const p1 = rng() * Math.PI * 2, p2 = rng() * Math.PI * 2;
+  const k1 = 2 + ((rng() * 2) | 0), k2 = 3 + ((rng() * 3) | 0);
+  ctx.beginPath();
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2 + rot;
+    const m = 1 + macro * Math.sin(a * k1 + p1) + macro * 0.55 * Math.sin(a * k2 + p2);
+    const rr = o.roughFn ? o.roughFn(a) : (o.rough ?? 0.04);
+    const r = m * (1 + (rng() * 2 - 1) * rr);
+    const x = cx + Math.cos(a) * rx * r, y = cy + Math.sin(a) * ry * r;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+const dn = (a: number) => Math.max(0, Math.sin(a)); // 1 at bottom, 0 at top
+
+/** Rough tapered limb (flipper / leg) with a hand-drawn wobble. */
+function rlimb(
+  ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number,
+  w: number, rng: () => number, fill: string,
+) {
+  const mx = (x1 + x2) / 2 + (rng() * 2 - 1) * w * 1.1;
+  const my = (y1 + y2) / 2 + (rng() * 2 - 1) * w * 1.1;
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+  ctx.beginPath();
+  ctx.moveTo(x1 + nx * w, y1 + ny * w);
+  ctx.quadraticCurveTo(mx + nx * w * 0.85, my + ny * w * 0.85, x2 + nx * w * 0.4, y2 + ny * w * 0.4);
+  ctx.lineTo(x2 - nx * w * 0.4, y2 - ny * w * 0.4);
+  ctx.quadraticCurveTo(mx - nx * w * 0.85, my - ny * w * 0.85, x1 - nx * w, y1 - ny * w);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
 }
 
-const TURTLE = { shell: '#3f9e6e', plate: '#2f7d57', skin: '#57b486' };
-const CRAB = { body: '#e8513f', claw: '#d23b2a' };
-const GULL = { body: '#eef2f4', wing: '#c6d1d8', beak: '#f5a23c' };
-const SEAL = { body: '#8f8a7e', light: '#aaa498' };
+// ─── eyes: A plain dot · B white patch + pupil · C dot + hand-cut fleck.
+//     mixed across the roster so the cast feels varied, not stamped. ───
+const INK = '#1d2620';
+const EYE: Record<CreatureKind, 'A' | 'B' | 'C'> = {
+  turtle: 'C', crab: 'A', gull: 'B', starfish: 'A', dolphin: 'C', seal: 'B', shell: 'A',
+  whale: 'C', ray: 'A', octopus: 'B', pufferfish: 'B', jellyfish: 'C', seahorse: 'A', otter: 'B', orca: 'C',
+};
+function eye(
+  ctx: CanvasRenderingContext2D, x: number, y: number, r: number,
+  kind: CreatureKind, rng: () => number, gx = 0, gy = 0,
+) {
+  const st = EYE[kind];
+  if (st === 'B') {
+    rough(ctx, x, y, r * 1.55, r * 1.5, { n: 11, macro: 0.18, rough: 0.14 }, rng, '#f5f3ea');
+    circle(ctx, x + gx, y + gy, r * 0.78, INK);
+  } else if (st === 'C') {
+    circle(ctx, x, y, r, INK);
+    const fr = r * (0.34 + rng() * 0.12), fa = -2.2 + rng() * 0.7;
+    ctx.save();
+    ctx.translate(x + Math.cos(fa) * r * 0.4, y + Math.sin(fa) * r * 0.4);
+    ctx.rotate(rng() * Math.PI * 2);
+    ctx.beginPath();
+    ctx.moveTo(-fr, 0);
+    ctx.lineTo(fr * 0.4, -fr * 0.8);
+    ctx.lineTo(fr, fr * 0.3);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fill();
+    ctx.restore();
+  } else {
+    circle(ctx, x, y, r, INK);
+  }
+}
+
+const TURTLE = { shell: '#3a9e6a', plate: '#2c7d54', skin: '#56b487' };
+const CRAB = { body: '#e2503a', claw: '#cf3f2b' };
+const GULL = { body: '#f1f4f6', wing: '#c6d1d8', beak: '#f5a23c' };
+const SEAL = { body: '#a59c89', light: '#b3aa95' };
 const DOLPHIN = { body: '#4a86b4', belly: '#dbe8f0' };
 
-function turtle(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  const paddle = Math.sin(time * 3 + ph) * 0.25;
-  // flippers (flat)
-  ctx.fillStyle = TURTLE.skin;
-  for (const sgn of [-1, 1]) {
-    ctx.save();
-    ctx.translate(sgn * s * 0.72, -s * 0.12);
-    ctx.rotate(sgn * (0.5 + paddle));
-    ellipse(ctx, 0, 0, s * 0.5, s * 0.24, TURTLE.skin);
-    ctx.restore();
-    ellipse(ctx, sgn * s * 0.5, s * 0.6, s * 0.28, s * 0.16, TURTLE.skin);
-  }
-  // head
-  circle(ctx, 0, -s * 0.86, s * 0.28, TURTLE.skin);
-  // shell
-  ellipse(ctx, 0, 0, s * 0.74, s * 0.6, TURTLE.shell);
-  // flat hex plates
-  ctx.fillStyle = TURTLE.plate;
-  circle(ctx, 0, -s * 0.05, s * 0.2, TURTLE.plate);
+function turtle(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
+  const paddle = Math.sin(time * 3 + ph) * 0.2;
+  // flippers — uneven, fronts paddle
+  rlimb(ctx, -s * 0.55, -s * 0.05, -s * 1.02, -s * 0.3 + paddle * s * 0.4, s * 0.2, rng, TURTLE.skin);
+  rlimb(ctx, s * 0.56, -s * 0.1, s * 1.0, -s * 0.12 - paddle * s * 0.4, s * 0.19, rng, TURTLE.skin);
+  rlimb(ctx, -s * 0.5, s * 0.5, -s * 0.84, s * 0.76, s * 0.16, rng, TURTLE.skin);
+  rlimb(ctx, s * 0.5, s * 0.52, s * 0.92, s * 0.66, s * 0.17, rng, TURTLE.skin);
+  rough(ctx, s * 0.03, -s * 0.84, s * 0.3, s * 0.32, { n: 20, macro: 0.1, roughFn: a => 0.02 + 0.05 * dn(a) }, rng, TURTLE.skin);
+  rough(ctx, 0, 0, s * 0.82, s * 0.66, { n: 36, macro: 0.06, roughFn: a => 0.015 + 0.075 * dn(a) }, rng, TURTLE.shell);
+  rough(ctx, -s * 0.02, -s * 0.05, s * 0.22, s * 0.2, { n: 12, macro: 0.16, rough: 0.1 }, rng, TURTLE.plate);
   for (let i = 0; i < 5; i++) {
-    const ang = (i / 5) * Math.PI * 2 - Math.PI / 2;
-    circle(ctx, Math.cos(ang) * s * 0.42, Math.sin(ang) * s * 0.34 - s * 0.05, s * 0.12, TURTLE.plate);
+    const a = (i / 5) * Math.PI * 2 - 1 + rng() * 0.25;
+    rough(ctx, Math.cos(a) * s * 0.44, Math.sin(a) * s * 0.36 - s * 0.05, s * 0.12, s * 0.12, { n: 9, macro: 0.2, rough: 0.12 }, rng, TURTLE.plate);
   }
-  eye(ctx, -s * 0.1, -s * 0.9, s * 0.06);
-  eye(ctx, s * 0.1, -s * 0.9, s * 0.06);
+  eye(ctx, -s * 0.09, -s * 0.88, s * 0.075, 'turtle', rng);
+  eye(ctx, s * 0.12, -s * 0.85, s * 0.07, 'turtle', rng);
 }
 
-function crab(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  const wv = Math.sin(time * 5 + ph) * 0.3;
-  // legs (flat thick)
-  ctx.fillStyle = CRAB.claw;
+function crab(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
+  const wv = Math.sin(time * 5 + ph) * 0.25;
   for (const sgn of [-1, 1]) {
     for (let i = 0; i < 3; i++) {
-      const ly = -s * 0.02 + i * s * 0.26;
-      ctx.save();
-      ctx.translate(sgn * s * 0.55, ly);
-      ctx.rotate(sgn * (0.2 + i * 0.18));
-      roundBar(ctx, 0, -s * 0.05, s * 0.5, s * 0.12);
-      ctx.restore();
+      const ly = -s * 0.05 + i * s * 0.28;
+      rlimb(ctx, sgn * s * 0.5, ly, sgn * (s * 0.95 + rng() * s * 0.12), ly + s * 0.2 - i * s * 0.05, s * 0.075, rng, CRAB.claw);
     }
   }
-  // claws
   for (const sgn of [-1, 1]) {
     ctx.save();
-    ctx.translate(sgn * s * 0.72, -s * 0.46);
-    ctx.rotate(sgn * wv * 0.4);
-    ellipse(ctx, 0, 0, s * 0.32, s * 0.24, CRAB.claw);
+    ctx.translate(sgn * s * 0.72, -s * 0.45);
+    ctx.rotate(sgn * wv * 0.3);
+    rough(ctx, 0, 0, s * 0.3, s * 0.26, { n: 11, macro: 0.16, rough: 0.1 }, rng, CRAB.claw);
     ctx.restore();
   }
-  // body
-  ellipse(ctx, 0, 0, s * 0.72, s * 0.5, CRAB.body);
-  // eye stalks
-  ctx.strokeStyle = CRAB.body;
-  ctx.lineWidth = s * 0.1;
-  ctx.lineCap = 'round';
+  rough(ctx, 0, 0, s * 0.74, s * 0.52, { n: 30, macro: 0.08, roughFn: a => 0.02 + 0.06 * dn(a) }, rng, CRAB.body);
   for (const sgn of [-1, 1]) {
+    ctx.strokeStyle = CRAB.body;
+    ctx.lineWidth = s * 0.09;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(sgn * s * 0.22, -s * 0.28);
-    ctx.lineTo(sgn * s * 0.28, -s * 0.6);
+    ctx.lineTo(sgn * s * 0.28, -s * 0.62);
     ctx.stroke();
-    eye(ctx, sgn * s * 0.28, -s * 0.64, s * 0.1);
+    eye(ctx, sgn * s * 0.28, -s * 0.66, s * 0.1, 'crab', rng);
   }
 }
 
-function gull(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
+function gull(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const tt = Math.sin(time * 3 + ph);
-  // body
-  ellipse(ctx, 0, s * 0.05, s * 0.5, s * 0.62, GULL.body);
-  // wing (flat)
+  rough(ctx, 0, s * 0.05, s * 0.5, s * 0.62, { n: 32, macro: 0.06, roughFn: a => 0.012 + 0.05 * dn(a) }, rng, GULL.body);
   ctx.save();
-  ctx.rotate(tt * 0.08);
-  ellipse(ctx, s * 0.18, 0, s * 0.32, s * 0.46, GULL.wing);
+  ctx.rotate(tt * 0.06);
+  rough(ctx, s * 0.18, 0, s * 0.34, s * 0.46, { n: 20, macro: 0.1, rough: 0.06 }, rng, GULL.wing);
   ctx.restore();
-  // head
-  circle(ctx, -s * 0.05, -s * 0.66, s * 0.3, GULL.body);
-  // beak
+  rough(ctx, -s * 0.05, -s * 0.66, s * 0.31, s * 0.32, { n: 18, macro: 0.08, rough: 0.05 }, rng, GULL.body);
   ctx.fillStyle = GULL.beak;
   ctx.beginPath();
-  ctx.moveTo(-s * 0.3, -s * 0.7);
-  ctx.lineTo(-s * 0.66, -s * 0.62);
-  ctx.lineTo(-s * 0.3, -s * 0.54);
+  ctx.moveTo(-s * 0.3, -s * 0.68);
+  ctx.lineTo(-s * 0.66, -s * 0.58);
+  ctx.lineTo(-s * 0.28, -s * 0.5);
   ctx.closePath();
   ctx.fill();
-  // legs
   ctx.strokeStyle = GULL.beak;
-  ctx.lineWidth = s * 0.08;
+  ctx.lineWidth = s * 0.07;
   ctx.lineCap = 'round';
   for (const sgn of [-1, 1]) {
     ctx.beginPath();
@@ -648,36 +698,33 @@ function gull(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number
     ctx.lineTo(sgn * s * 0.13, s * 0.9);
     ctx.stroke();
   }
-  eye(ctx, -s * 0.12, -s * 0.7, s * 0.06);
+  eye(ctx, -s * 0.12, -s * 0.67, s * 0.07, 'gull', rng, 1, 1);
 }
 
-function starfish(ctx: CanvasRenderingContext2D, s: number) {
+function starfish(ctx: CanvasRenderingContext2D, s: number, rng: () => number) {
   ctx.fillStyle = '#f0913b';
   ctx.beginPath();
   for (let i = 0; i < 10; i++) {
     const ang = (i / 10) * Math.PI * 2 - Math.PI / 2;
-    const r = i % 2 === 0 ? s * 0.9 : s * 0.4;
-    const x = Math.cos(ang) * r;
-    const y = Math.sin(ang) * r;
+    const base = i % 2 === 0 ? 0.92 : 0.42;
+    const r = s * base * (1 + (rng() * 2 - 1) * 0.08);
+    const x = Math.cos(ang) * r, y = Math.sin(ang) * r;
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
   ctx.closePath();
   ctx.fill();
-  // flat dots
-  ctx.fillStyle = '#ffd9a0';
   circle(ctx, 0, 0, s * 0.12, '#ffd9a0');
   for (let i = 0; i < 5; i++) {
     const ang = (i / 5) * Math.PI * 2 - Math.PI / 2;
-    circle(ctx, Math.cos(ang) * s * 0.44, Math.sin(ang) * s * 0.44, s * 0.07, '#ffd9a0');
+    circle(ctx, Math.cos(ang) * s * 0.44, Math.sin(ang) * s * 0.44, s * 0.06 + rng() * s * 0.02, '#ffd9a0');
   }
 }
 
-function dolphin(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
+function dolphin(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const leap = (Math.sin(time * 1.3 + ph) + 1) / 2;
   ctx.save();
   ctx.translate(0, -leap * s * 1.2);
   ctx.rotate(-0.5 + leap * 1.0);
-  // body (flat curved cutout)
   ctx.fillStyle = DOLPHIN.body;
   ctx.beginPath();
   ctx.moveTo(-s * 0.95, s * 0.22);
@@ -685,7 +732,6 @@ function dolphin(ctx: CanvasRenderingContext2D, s: number, time: number, ph: num
   ctx.quadraticCurveTo(s * 0.3, s * 0.12, -s * 0.95, s * 0.22);
   ctx.closePath();
   ctx.fill();
-  // belly
   ctx.fillStyle = DOLPHIN.belly;
   ctx.beginPath();
   ctx.moveTo(-s * 0.6, s * 0.2);
@@ -693,7 +739,6 @@ function dolphin(ctx: CanvasRenderingContext2D, s: number, time: number, ph: num
   ctx.quadraticCurveTo(s * 0.1, s * 0.14, -s * 0.6, s * 0.2);
   ctx.closePath();
   ctx.fill();
-  // dorsal fin
   ctx.fillStyle = DOLPHIN.body;
   ctx.beginPath();
   ctx.moveTo(-s * 0.1, -s * 0.48);
@@ -701,61 +746,57 @@ function dolphin(ctx: CanvasRenderingContext2D, s: number, time: number, ph: num
   ctx.lineTo(s * 0.32, -s * 0.42);
   ctx.closePath();
   ctx.fill();
+  eye(ctx, s * 0.6, -s * 0.12, s * 0.07, 'dolphin', rng);
   ctx.restore();
 }
 
-function seal(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
+function seal(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const tt = Math.sin(time * 2.5 + ph);
-  // body (flat blob)
-  ellipse(ctx, 0, s * 0.05, s * 0.88, s * 0.56, SEAL.body);
-  // tail flipper
   ctx.save();
-  ctx.translate(s * 0.74, -s * 0.12);
-  ctx.rotate(tt * 0.2);
-  ellipse(ctx, 0, 0, s * 0.3, s * 0.17, SEAL.body);
+  ctx.translate(s * 0.72, -s * 0.08);
+  ctx.rotate(tt * 0.15);
+  rlimb(ctx, 0, 0, s * 0.42, -s * 0.22, s * 0.2, rng, SEAL.body);
   ctx.restore();
-  // head
-  circle(ctx, -s * 0.58, -s * 0.46, s * 0.34, SEAL.light);
-  // snout
-  ellipse(ctx, -s * 0.72, -s * 0.34, s * 0.12, s * 0.09, SEAL.body);
-  eye(ctx, -s * 0.7, -s * 0.52, s * 0.07);
-  eye(ctx, -s * 0.46, -s * 0.5, s * 0.07);
+  rough(ctx, 0, s * 0.06, s * 0.95, s * 0.6, { n: 36, macro: 0.08, roughFn: a => 0.012 + 0.06 * dn(a) }, rng, SEAL.body);
+  rough(ctx, -s * 0.6, -s * 0.42, s * 0.44, s * 0.44, { n: 22, macro: 0.09, roughFn: a => 0.015 + 0.045 * dn(a) }, rng, SEAL.light);
+  rlimb(ctx, -s * 0.1, s * 0.45, s * 0.05, s * 0.72, s * 0.14, rng, SEAL.body);
+  eye(ctx, -s * 0.72, -s * 0.5, s * 0.075, 'seal', rng, 1, 1);
+  eye(ctx, -s * 0.48, -s * 0.47, s * 0.07, 'seal', rng, 1, 1);
+  circle(ctx, -s * 0.82, -s * 0.33, s * 0.06, '#3a3329');
 }
 
-function shell(ctx: CanvasRenderingContext2D, s: number) {
-  // flat fan with cut wedges
-  const base = '#f4cdb4';
-  ctx.fillStyle = base;
+function shell(ctx: CanvasRenderingContext2D, s: number, rng: () => number) {
+  ctx.fillStyle = '#f4cdb4';
   ctx.beginPath();
   ctx.moveTo(0, s * 0.5);
-  ctx.arc(0, s * 0.5, s * 0.78, Math.PI, 0);
+  const N = 16;
+  for (let i = 0; i <= N; i++) {
+    const a = Math.PI + (i / N) * Math.PI;
+    const rr = s * 0.78 * (1 + (rng() * 2 - 1) * 0.05);
+    ctx.lineTo(Math.cos(a) * rr, s * 0.5 + Math.sin(a) * rr);
+  }
   ctx.closePath();
   ctx.fill();
-  // flat ridge wedges
   ctx.fillStyle = '#e6a886';
   for (let i = 0; i < 4; i++) {
     const a0 = Math.PI + (i / 4 + 0.06) * Math.PI;
     const a1 = Math.PI + ((i + 0.45) / 4 + 0.06) * Math.PI;
     ctx.beginPath();
     ctx.moveTo(0, s * 0.5);
-    ctx.lineTo(Math.cos(a0) * s * 0.74, s * 0.5 + Math.sin(a0) * s * 0.74);
-    ctx.lineTo(Math.cos(a1) * s * 0.74, s * 0.5 + Math.sin(a1) * s * 0.74);
+    ctx.lineTo(Math.cos(a0) * s * 0.72, s * 0.5 + Math.sin(a0) * s * 0.72);
+    ctx.lineTo(Math.cos(a1) * s * 0.72, s * 0.5 + Math.sin(a1) * s * 0.72);
     ctx.closePath();
     ctx.fill();
   }
-  // hinge
   circle(ctx, 0, s * 0.5, s * 0.1, '#e6a886');
 }
 
-function whale(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  // gentle breach through the waterline (flat cut-paper)
-  const breach = (Math.sin(time * 0.8 + ph) + 1) / 2; // 0..1
+function whale(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
+  const breach = (Math.sin(time * 0.8 + ph) + 1) / 2;
   ctx.save();
   ctx.translate(0, -breach * s * 0.5);
   ctx.rotate(-0.25 + breach * 0.35);
-  const body = '#4a6f95';
-  const belly = '#cdd9e4';
-  // body
+  const body = '#4a6f95', belly = '#cdd9e4';
   ctx.beginPath();
   ctx.moveTo(-s * 1.4, s * 0.1);
   ctx.quadraticCurveTo(-s * 0.3, -s * 0.95, s * 1.0, -s * 0.35);
@@ -764,7 +805,6 @@ function whale(ctx: CanvasRenderingContext2D, s: number, time: number, ph: numbe
   ctx.closePath();
   ctx.fillStyle = body;
   ctx.fill();
-  // tail fluke
   ctx.beginPath();
   ctx.moveTo(-s * 1.2, s * 0.05);
   ctx.lineTo(-s * 1.6, -s * 0.45);
@@ -773,7 +813,6 @@ function whale(ctx: CanvasRenderingContext2D, s: number, time: number, ph: numbe
   ctx.closePath();
   ctx.fillStyle = body;
   ctx.fill();
-  // belly
   ctx.beginPath();
   ctx.moveTo(-s * 0.9, s * 0.12);
   ctx.quadraticCurveTo(s * 0.2, s * 0.02, s * 1.1, -s * 0.12);
@@ -781,7 +820,6 @@ function whale(ctx: CanvasRenderingContext2D, s: number, time: number, ph: numbe
   ctx.closePath();
   ctx.fillStyle = belly;
   ctx.fill();
-  // spout
   ctx.strokeStyle = 'rgba(255,255,255,0.7)';
   ctx.lineWidth = s * 0.08;
   ctx.lineCap = 'round';
@@ -791,19 +829,15 @@ function whale(ctx: CanvasRenderingContext2D, s: number, time: number, ph: numbe
     ctx.quadraticCurveTo(s * (0.7 + dx), -s * 0.8, s * (0.7 + dx * 3), -s * 0.95);
     ctx.stroke();
   }
-  // eye
-  circle(ctx, s * 0.7, -s * 0.18, s * 0.05, '#15202a');
+  eye(ctx, s * 0.7, -s * 0.18, s * 0.06, 'whale', rng);
   ctx.restore();
 }
 
-function ray(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  // manta ray gliding — flapping flat wings (cut-paper diamond)
+function ray(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const flap = Math.sin(time * 2 + ph) * 0.22;
-  const body = '#5a6f8c';
-  const belly = '#cdd6e0';
+  const body = '#5a6f8c', belly = '#cdd6e0';
   ctx.save();
   ctx.scale(1, 1 + flap * 0.3);
-  // wings (one diamond shape, swept)
   ctx.beginPath();
   ctx.moveTo(0, -s * 0.55);
   ctx.quadraticCurveTo(s * 1.5, -s * 0.4 - flap * s, s * 1.25, s * 0.3);
@@ -813,7 +847,6 @@ function ray(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number)
   ctx.closePath();
   ctx.fillStyle = body;
   ctx.fill();
-  // belly highlight
   ctx.beginPath();
   ctx.moveTo(0, -s * 0.4);
   ctx.quadraticCurveTo(s * 0.5, -s * 0.1, 0, s * 0.25);
@@ -821,7 +854,6 @@ function ray(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number)
   ctx.closePath();
   ctx.fillStyle = belly;
   ctx.fill();
-  // cephalic fins + tail
   ctx.strokeStyle = body;
   ctx.lineWidth = s * 0.1;
   ctx.lineCap = 'round';
@@ -829,16 +861,13 @@ function ray(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number)
   ctx.moveTo(0, s * 0.35);
   ctx.lineTo(0, s * 1.3);
   ctx.stroke();
-  // eyes
-  circle(ctx, -s * 0.34, -s * 0.34, s * 0.05, '#15202a');
-  circle(ctx, s * 0.34, -s * 0.34, s * 0.05, '#15202a');
+  eye(ctx, -s * 0.34, -s * 0.34, s * 0.05, 'ray', rng);
+  eye(ctx, s * 0.34, -s * 0.34, s * 0.05, 'ray', rng);
   ctx.restore();
 }
 
-function octopus(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  const body = '#c2588f';
-  const arm = '#a8447a';
-  // 8 waving arms fanning from the lower body
+function octopus(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
+  const body = '#c2588f', arm = '#a8447a';
   ctx.strokeStyle = arm;
   ctx.lineCap = 'round';
   for (let i = 0; i < 8; i++) {
@@ -851,38 +880,34 @@ function octopus(ctx: CanvasRenderingContext2D, s: number, time: number, ph: num
     ctx.quadraticCurveTo(tt * s * 0.55, s * 0.62, ex, ey);
     ctx.stroke();
   }
-  // mantle / head
-  ellipse(ctx, 0, -s * 0.05, s * 0.72, s * 0.82, body);
-  eye(ctx, -s * 0.26, -s * 0.12, s * 0.13);
-  eye(ctx, s * 0.26, -s * 0.12, s * 0.13);
+  rough(ctx, 0, -s * 0.05, s * 0.72, s * 0.82, { n: 26, macro: 0.08, roughFn: a => 0.015 + 0.05 * dn(a) }, rng, body);
+  eye(ctx, -s * 0.26, -s * 0.12, s * 0.13, 'octopus', rng, 2, 1);
+  eye(ctx, s * 0.26, -s * 0.12, s * 0.13, 'octopus', rng, 2, 1);
 }
 
-function pufferfish(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  const puff = 1 + 0.06 * Math.sin(time * 3 + ph);
-  const body = '#e0a23c';
-  const spike = '#c8862a';
-  const r = s * 0.7 * puff;
-  // spikes
+function pufferfish(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
+  const puff = 1 + 0.05 * Math.sin(time * 3 + ph);
+  const body = '#e0a23c', spike = '#c8862a', r = s * 0.7 * puff;
   ctx.fillStyle = spike;
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
+  for (let i = 0; i < 13; i++) {
+    const a = (i / 13) * Math.PI * 2;
+    const rr = r * (1 + (rng() * 2 - 1) * 0.05);
     ctx.beginPath();
-    ctx.moveTo(Math.cos(a - 0.13) * r, Math.sin(a - 0.13) * r);
-    ctx.lineTo(Math.cos(a) * r * 1.34, Math.sin(a) * r * 1.34);
-    ctx.lineTo(Math.cos(a + 0.13) * r, Math.sin(a + 0.13) * r);
+    ctx.moveTo(Math.cos(a - 0.12) * rr, Math.sin(a - 0.12) * rr);
+    ctx.lineTo(Math.cos(a) * rr * 1.32, Math.sin(a) * rr * 1.32);
+    ctx.lineTo(Math.cos(a + 0.12) * rr, Math.sin(a + 0.12) * rr);
     ctx.closePath();
     ctx.fill();
   }
-  circle(ctx, 0, 0, r, body);
-  ellipse(ctx, 0, s * 0.22, s * 0.46, s * 0.28, '#f0c267'); // belly
-  eye(ctx, -s * 0.22, -s * 0.12, s * 0.12);
-  eye(ctx, s * 0.22, -s * 0.12, s * 0.12);
-  ellipse(ctx, 0, s * 0.22, s * 0.1, s * 0.07, '#9c6620'); // mouth
+  rough(ctx, 0, 0, r, r, { n: 28, macro: 0.05, rough: 0.04 }, rng, body);
+  rough(ctx, 0, s * 0.22, s * 0.46, s * 0.28, { n: 14, macro: 0.1, rough: 0.06 }, rng, '#f0c267');
+  eye(ctx, -s * 0.22, -s * 0.12, s * 0.12, 'pufferfish', rng, 1, 1);
+  eye(ctx, s * 0.22, -s * 0.12, s * 0.12, 'pufferfish', rng, 1, 1);
+  circle(ctx, 0, s * 0.24, s * 0.05, '#9c6620');
 }
 
-function jellyfish(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
+function jellyfish(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const pulse = 1 + 0.08 * Math.sin(time * 2 + ph);
-  // tentacles
   ctx.strokeStyle = 'rgba(184,156,230,0.55)';
   ctx.lineWidth = s * 0.08;
   ctx.lineCap = 'round';
@@ -895,24 +920,17 @@ function jellyfish(ctx: CanvasRenderingContext2D, s: number, time: number, ph: n
     );
     ctx.stroke();
   }
-  // bell
-  ctx.fillStyle = 'rgba(186,156,232,0.72)';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, s * 0.7 * pulse, s * 0.56 * pulse, 0, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ellipse(ctx, 0, -s * 0.08, s * 0.4, s * 0.28, 'rgba(224,206,255,0.5)');
-  eye(ctx, -s * 0.16, -s * 0.05, s * 0.07);
-  eye(ctx, s * 0.16, -s * 0.05, s * 0.07);
+  rough(ctx, 0, s * 0.02, s * 0.7 * pulse, s * 0.6 * pulse, { n: 26, macro: 0.06, roughFn: a => 0.01 + 0.05 * dn(a) }, rng, 'rgba(186,156,232,0.74)');
+  rough(ctx, 0, -s * 0.08, s * 0.4, s * 0.28, { n: 14, macro: 0.1, rough: 0.05 }, rng, 'rgba(224,206,255,0.5)');
+  eye(ctx, -s * 0.16, -s * 0.05, s * 0.07, 'jellyfish', rng);
+  eye(ctx, s * 0.16, -s * 0.05, s * 0.07, 'jellyfish', rng);
 }
 
-function seahorse(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
+function seahorse(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const sway = Math.sin(time * 2.5 + ph) * 0.08;
-  const body = '#e8a23a';
-  const fin = '#f0c267';
+  const body = '#e8a23a', fin = '#f0c267';
   ctx.save();
   ctx.rotate(sway);
-  // curved S body + curled tail
   ctx.strokeStyle = body;
   ctx.lineCap = 'round';
   ctx.lineWidth = s * 0.46;
@@ -921,42 +939,29 @@ function seahorse(ctx: CanvasRenderingContext2D, s: number, time: number, ph: nu
   ctx.quadraticCurveTo(s * 0.5, -s * 0.3, s * 0.1, s * 0.2);
   ctx.quadraticCurveTo(-s * 0.35, s * 0.6, s * 0.05, s * 0.95);
   ctx.stroke();
-  // head + snout
+  rough(ctx, -s * 0.05, -s * 0.78, s * 0.27, s * 0.28, { n: 16, macro: 0.12, rough: 0.08 }, rng, body);
   ctx.fillStyle = body;
-  ctx.beginPath();
-  ctx.arc(-s * 0.05, -s * 0.78, s * 0.26, 0, Math.PI * 2);
-  ctx.fill();
   ctx.beginPath();
   ctx.moveTo(-s * 0.28, -s * 0.86);
   ctx.lineTo(-s * 0.62, -s * 0.78);
   ctx.lineTo(-s * 0.26, -s * 0.66);
   ctx.closePath();
   ctx.fill();
-  // dorsal fin
-  ctx.fillStyle = fin;
-  ctx.beginPath();
-  ctx.ellipse(s * 0.32, -s * 0.15, s * 0.1, s * 0.28, 0.5, 0, Math.PI * 2);
-  ctx.fill();
-  eye(ctx, -s * 0.02, -s * 0.82, s * 0.07);
+  rough(ctx, s * 0.32, -s * 0.15, s * 0.1, s * 0.28, { n: 12, macro: 0.18, rough: 0.1, rot: 0.5 }, rng, fin);
+  eye(ctx, -s * 0.02, -s * 0.82, s * 0.06, 'seahorse', rng);
   ctx.restore();
 }
 
-function otter(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
-  // floating on its back, holding a shell on its belly
+function otter(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const bob = Math.sin(time * 2 + ph) * 0.04;
-  const body = '#8a6a4a';
-  const light = '#a98a68';
+  const body = '#8a6a4a', light = '#a98a68';
   ctx.save();
   ctx.rotate(bob);
-  // body (horizontal)
-  ellipse(ctx, 0, 0, s * 1.05, s * 0.5, body);
-  ellipse(ctx, 0, s * 0.04, s * 0.78, s * 0.34, light); // belly
-  // head at left
-  circle(ctx, -s * 0.95, -s * 0.12, s * 0.34, body);
-  circle(ctx, -s * 1.12, -s * 0.32, s * 0.1, body); // ear
+  rough(ctx, 0, 0, s * 1.05, s * 0.5, { n: 34, macro: 0.08, rough: 0.05 }, rng, body);
+  rough(ctx, 0, s * 0.04, s * 0.78, s * 0.34, { n: 24, macro: 0.08, rough: 0.05 }, rng, light);
+  rough(ctx, -s * 0.95, -s * 0.12, s * 0.34, s * 0.34, { n: 18, macro: 0.1, rough: 0.06 }, rng, body);
+  circle(ctx, -s * 1.12, -s * 0.32, s * 0.1, body);
   circle(ctx, -s * 0.78, -s * 0.32, s * 0.1, body);
-  // little paws holding a shell
-  ctx.fillStyle = body;
   circle(ctx, s * 0.05, -s * 0.18, s * 0.12, body);
   circle(ctx, s * 0.32, -s * 0.18, s * 0.12, body);
   ctx.fillStyle = '#f4cdb4';
@@ -964,22 +969,19 @@ function otter(ctx: CanvasRenderingContext2D, s: number, time: number, ph: numbe
   ctx.arc(s * 0.18, -s * 0.28, s * 0.2, Math.PI, 0);
   ctx.closePath();
   ctx.fill();
-  // feet up at right
-  circle(ctx, s * 0.95, -s * 0.22, s * 0.14, body);
-  eye(ctx, -s * 1.02, -s * 0.16, s * 0.06);
-  eye(ctx, -s * 0.86, -s * 0.16, s * 0.06);
-  circle(ctx, -s * 1.18, -s * 0.06, s * 0.05, '#3a2a1c'); // nose
+  rough(ctx, s * 0.95, -s * 0.22, s * 0.16, s * 0.16, { n: 10, macro: 0.12, rough: 0.1 }, rng, body);
+  eye(ctx, -s * 1.02, -s * 0.16, s * 0.06, 'otter', rng);
+  eye(ctx, -s * 0.86, -s * 0.16, s * 0.06, 'otter', rng);
+  circle(ctx, -s * 1.18, -s * 0.06, s * 0.05, '#3a2a1c');
   ctx.restore();
 }
 
-function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number) {
+function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number, rng: () => number) {
   const breach = (Math.sin(time * 0.9 + ph) + 1) / 2;
-  const dark = '#1c2630';
-  const white = '#eef4f7';
+  const dark = '#1c2630', white = '#eef4f7';
   ctx.save();
   ctx.translate(0, -breach * s * 0.6);
   ctx.rotate(-0.3 + breach * 0.5);
-  // body
   ctx.beginPath();
   ctx.moveTo(-s * 1.3, s * 0.18);
   ctx.quadraticCurveTo(-s * 0.2, -s * 0.95, s * 1.05, -s * 0.28);
@@ -988,7 +990,6 @@ function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number
   ctx.closePath();
   ctx.fillStyle = dark;
   ctx.fill();
-  // tail fluke
   ctx.beginPath();
   ctx.moveTo(-s * 1.1, s * 0.1);
   ctx.lineTo(-s * 1.55, -s * 0.4);
@@ -997,7 +998,6 @@ function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number
   ctx.closePath();
   ctx.fillStyle = dark;
   ctx.fill();
-  // white belly + flank patch
   ctx.fillStyle = white;
   ctx.beginPath();
   ctx.moveTo(-s * 0.5, s * 0.16);
@@ -1005,7 +1005,6 @@ function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number
   ctx.quadraticCurveTo(s * 0.3, s * 0.24, -s * 0.5, s * 0.16);
   ctx.closePath();
   ctx.fill();
-  // dorsal fin (tall)
   ctx.fillStyle = dark;
   ctx.beginPath();
   ctx.moveTo(-s * 0.05, -s * 0.5);
@@ -1013,8 +1012,7 @@ function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number
   ctx.lineTo(s * 0.42, -s * 0.45);
   ctx.closePath();
   ctx.fill();
-  // white eye patch + eye
-  ellipse(ctx, s * 0.7, -s * 0.28, s * 0.16, s * 0.09, white);
+  rough(ctx, s * 0.7, -s * 0.28, s * 0.18, s * 0.1, { n: 10, macro: 0.14, rough: 0.1 }, rng, white);
   circle(ctx, s * 0.72, -s * 0.28, s * 0.05, '#0c1218');
   ctx.restore();
 }
