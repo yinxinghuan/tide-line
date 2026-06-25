@@ -66,8 +66,8 @@ export default function CreaturePortrait({ kind, count = 1, mini = false }: Prop
     <div className="tl-medallion">
       <div className="tl-medallion__disc">
         <canvas ref={ref} className="tl-medallion__cv" />
-        {count > 1 && <span className="tl-medallion__count">×{count}</span>}
       </div>
+      {count > 1 && <span className="tl-medallion__count">×{count}</span>}
       <span className="tl-medallion__name">{t(kind)}</span>
     </div>
   );
