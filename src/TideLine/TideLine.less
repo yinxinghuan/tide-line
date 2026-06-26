@@ -399,6 +399,7 @@
   }
   &__name {
     flex: 1;
+    min-width: 0; // required for ellipsis on a flex item (flex:1 ≠ min-width:0)
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
@@ -406,6 +407,7 @@
     text-overflow: ellipsis;
   }
   &__litter {
+    flex-shrink: 0;
     font-size: 14px;
     font-weight: 800;
     color: @teal;
@@ -461,6 +463,7 @@
     font-weight: 700;
     color: @muted;
     white-space: nowrap;
+    flex-shrink: 0; // keep stats intact; the author chip yields space instead
     font-variant-numeric: tabular-nums;
     span {
       display: inline-flex;
@@ -625,6 +628,8 @@
   color: @text;
   cursor: pointer;
   max-width: 100%;
+  min-width: 0; // allow the chip to shrink inside its flex parent (so the
+                // name can ellipsize instead of overflowing — long usernames)
   overflow: hidden;
   &--self {
     font-weight: 800;
@@ -649,6 +654,7 @@
   &__name {
     font-size: 13px;
     font-weight: 600;
+    min-width: 0; // required for text-overflow:ellipsis on a flex item
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
