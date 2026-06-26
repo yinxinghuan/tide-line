@@ -1127,38 +1127,63 @@ function orca(ctx: CanvasRenderingContext2D, s: number, time: number, ph: number
 
 // ─── forest creatures (Wild Line 2.0) — drawn around origin, hand-drawn ──────
 function fox(ctx: CanvasRenderingContext2D, s: number, _t: number, _ph: number, rng: () => number) {
-  const o = '#e07a3a', d = '#c75f28', w = '#f3ece0';
-  rlimb(ctx, -s * 0.4, s * 0.3, -s * 0.45, s * 0.95, s * 0.12, rng, d);
-  rlimb(ctx, s * 0.4, s * 0.3, s * 0.45, s * 0.95, s * 0.12, rng, d);
-  rough(ctx, -s * 0.95, s * 0.1, s * 0.5, s * 0.34, { n: 18, macro: 0.2, rough: 0.12 }, rng, o); // tail
-  rough(ctx, -s * 1.2, s * 0.05, s * 0.2, s * 0.2, { n: 12, macro: 0.2, rough: 0.12 }, rng, w);
-  rough(ctx, 0, s * 0.1, s * 0.62, s * 0.56, { n: 30, macro: 0.1, roughFn: a => 0.02 + 0.05 * dn(a) }, rng, o); // body
-  rough(ctx, s * 0.1, -s * 0.55, s * 0.46, s * 0.44, { n: 22, macro: 0.12, rough: 0.07 }, rng, o); // head
-  ctx.fillStyle = o;
-  ctx.beginPath(); ctx.moveTo(0, -s * 0.9); ctx.lineTo(-s * 0.22, -s * 1.35); ctx.lineTo(-s * 0.32, -s * 0.78); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(s * 0.34, -s * 0.85); ctx.lineTo(s * 0.5, -s * 1.3); ctx.lineTo(s * 0.56, -s * 0.7); ctx.closePath(); ctx.fill();
-  rough(ctx, s * 0.25, -s * 0.4, s * 0.26, s * 0.24, { n: 14, macro: 0.14, rough: 0.08 }, rng, w); // snout
-  circle(ctx, s * 0.46, -s * 0.4, s * 0.06, '#2a1d16'); // nose
-  eye(ctx, 0, -s * 0.55, s * 0.07, 'fox', rng);
-  eye(ctx, s * 0.28, -s * 0.52, s * 0.065, 'fox', rng);
+  const o = '#e07a3a', d = '#a64d1c', w = '#f3ece0', ink = '#2a1d16';
+  // ── big bushy tail, swept up behind the left, white tip connected at the end ──
+  rough(ctx, -s * 0.74, -s * 0.3, s * 0.5, s * 0.62, { n: 24, macro: 0.16, rough: 0.13 }, rng, o);
+  rough(ctx, -s * 0.94, -s * 0.78, s * 0.3, s * 0.32, { n: 16, macro: 0.18, rough: 0.13 }, rng, w); // tip (overlaps plume)
+  // ── legs with dark socks ──
+  rlimb(ctx, -s * 0.26, s * 0.28, -s * 0.3, s * 1.0, s * 0.12, rng, d);
+  rlimb(ctx, s * 0.3, s * 0.28, s * 0.34, s * 1.0, s * 0.12, rng, d);
+  rlimb(ctx, s * 0.04, s * 0.32, s * 0.06, s * 1.02, s * 0.11, rng, d);
+  // ── body ──
+  rough(ctx, 0, s * 0.14, s * 0.58, s * 0.48, { n: 30, macro: 0.1, roughFn: a => 0.02 + 0.05 * dn(a) }, rng, o);
+  rough(ctx, s * 0.28, s * 0.36, s * 0.26, s * 0.32, { n: 16, macro: 0.12, rough: 0.08 }, rng, w); // white chest
+  // ── head (upper right) ──
+  rough(ctx, s * 0.3, -s * 0.46, s * 0.46, s * 0.42, { n: 22, macro: 0.12, rough: 0.07 }, rng, o);
+  // ears: orange outer + dark inner
+  const ear = (bx: number, tx: number) => {
+    ctx.fillStyle = o;
+    ctx.beginPath(); ctx.moveTo(s * bx, -s * 0.78); ctx.lineTo(s * tx, -s * 1.3); ctx.lineTo(s * (bx + 0.3), -s * 0.74); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = ink;
+    ctx.beginPath(); ctx.moveTo(s * (bx + 0.06), -s * 0.82); ctx.lineTo(s * (tx + (tx > 0.3 ? 0.02 : -0.02)), -s * 1.18); ctx.lineTo(s * (bx + 0.21), -s * 0.8); ctx.closePath(); ctx.fill();
+  };
+  ear(0.0, -0.08);
+  ear(0.42, 0.62);
+  // white muzzle + nose, pointing right
+  rough(ctx, s * 0.54, -s * 0.34, s * 0.27, s * 0.23, { n: 14, macro: 0.14, rough: 0.08 }, rng, w);
+  circle(ctx, s * 0.76, -s * 0.38, s * 0.07, ink); // nose
+  eye(ctx, s * 0.2, -s * 0.52, s * 0.07, 'fox', rng);
+  eye(ctx, s * 0.48, -s * 0.48, s * 0.065, 'fox', rng);
 }
 
 function deer(ctx: CanvasRenderingContext2D, s: number, _t: number, _ph: number, rng: () => number) {
-  const b = '#b07a4a', l = '#caa276';
-  rlimb(ctx, -s * 0.4, s * 0.2, -s * 0.5, s * 1.05, s * 0.1, rng, b);
-  rlimb(ctx, -s * 0.05, s * 0.25, -s * 0.05, s * 1.1, s * 0.1, rng, b);
-  rlimb(ctx, s * 0.4, s * 0.2, s * 0.52, s * 1.05, s * 0.1, rng, b);
-  rlimb(ctx, s * 0.1, s * 0.25, s * 0.12, s * 1.1, s * 0.1, rng, b);
-  rough(ctx, 0, 0, s * 0.66, s * 0.46, { n: 28, macro: 0.1, roughFn: a => 0.02 + 0.05 * dn(a) }, rng, b); // body
-  rlimb(ctx, s * 0.4, -s * 0.1, s * 0.7, -s * 0.7, s * 0.16, rng, b); // neck
-  rough(ctx, s * 0.78, -s * 0.85, s * 0.28, s * 0.34, { n: 18, macro: 0.12, rough: 0.07 }, rng, l); // head
-  ctx.fillStyle = b;
-  ctx.beginPath(); ctx.moveTo(s * 0.66, -s * 1.05); ctx.lineTo(s * 0.6, -s * 1.45); ctx.lineTo(s * 0.78, -s * 1.12); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(s * 0.95, -s * 1.05); ctx.lineTo(s * 1.05, -s * 1.4); ctx.lineTo(s * 0.9, -s * 1.12); ctx.closePath(); ctx.fill();
-  rough(ctx, s * 0.62, -s * 0.82, s * 0.1, s * 0.18, { n: 10, macro: 0.2, rough: 0.1, rot: -0.4 }, rng, l);
-  rough(ctx, s * 0.98, -s * 0.8, s * 0.1, s * 0.18, { n: 10, macro: 0.2, rough: 0.1, rot: 0.4 }, rng, l);
-  circle(ctx, s * 1.02, -s * 0.78, s * 0.05, '#2a1d16');
-  eye(ctx, s * 0.84, -s * 0.86, s * 0.06, 'deer', rng);
+  // a fawn — slender legs, big leaf-ears, white belly + dappled spots, short tail
+  const b = '#b07a4a', l = '#caa276', w = '#efe6d2', ink = '#2a1d16';
+  // ── slender legs ──
+  rlimb(ctx, -s * 0.34, s * 0.18, -s * 0.4, s * 1.05, s * 0.085, rng, b);
+  rlimb(ctx, -s * 0.12, s * 0.22, -s * 0.13, s * 1.08, s * 0.08, rng, b);
+  rlimb(ctx, s * 0.32, s * 0.18, s * 0.36, s * 1.05, s * 0.085, rng, b);
+  rlimb(ctx, s * 0.5, s * 0.16, s * 0.56, s * 1.06, s * 0.08, rng, b);
+  // ── short raised tail (white underside) ──
+  rough(ctx, -s * 0.56, -s * 0.06, s * 0.1, s * 0.15, { n: 10, macro: 0.16, rough: 0.1 }, rng, w);
+  // ── body (oval, not round) ──
+  rough(ctx, 0, 0, s * 0.6, s * 0.4, { n: 28, macro: 0.08, roughFn: a => 0.02 + 0.05 * dn(a) }, rng, b);
+  rough(ctx, s * 0.02, s * 0.2, s * 0.42, s * 0.2, { n: 16, macro: 0.1, rough: 0.06 }, rng, w); // white belly
+  ctx.globalAlpha = 0.85; // dappled spots
+  for (const [sx, sy] of [[-0.24, -0.16], [0.0, -0.2], [0.26, -0.14], [-0.1, -0.02], [0.16, 0.0]]) circle(ctx, s * sx, s * sy, s * 0.045, w);
+  ctx.globalAlpha = 1;
+  // ── short neck up to the head (right) ──
+  rlimb(ctx, s * 0.4, -s * 0.04, s * 0.66, -s * 0.62, s * 0.15, rng, b);
+  // ── big leaf ears (behind the head) ──
+  rough(ctx, s * 0.58, -s * 0.96, s * 0.11, s * 0.22, { n: 12, macro: 0.16, rough: 0.1, rot: -0.5 }, rng, b);
+  rough(ctx, s * 0.58, -s * 0.94, s * 0.05, s * 0.14, { n: 10, rough: 0.1, rot: -0.5 }, rng, l);
+  rough(ctx, s * 0.9, -s * 0.98, s * 0.11, s * 0.22, { n: 12, macro: 0.16, rough: 0.1, rot: 0.5 }, rng, b);
+  rough(ctx, s * 0.9, -s * 0.96, s * 0.05, s * 0.14, { n: 10, rough: 0.1, rot: 0.5 }, rng, l);
+  // ── head + tapered snout ──
+  rough(ctx, s * 0.74, -s * 0.74, s * 0.25, s * 0.22, { n: 18, macro: 0.1, rough: 0.07 }, rng, b);
+  rough(ctx, s * 0.98, -s * 0.6, s * 0.17, s * 0.12, { n: 12, macro: 0.12, rough: 0.08 }, rng, l); // muzzle
+  circle(ctx, s * 1.12, -s * 0.58, s * 0.045, ink); // nose
+  eye(ctx, s * 0.8, -s * 0.78, s * 0.062, 'deer', rng);
 }
 
 function owl(ctx: CanvasRenderingContext2D, s: number, _t: number, _ph: number, rng: () => number) {
@@ -1177,19 +1202,28 @@ function owl(ctx: CanvasRenderingContext2D, s: number, _t: number, _ph: number, 
 }
 
 function hedgehog(ctx: CanvasRenderingContext2D, s: number, _t: number, _ph: number, rng: () => number) {
-  const sp = '#6a4f36', f = '#caa276';
-  ctx.fillStyle = sp;
-  for (let i = 0; i < 22; i++) {
-    const a = Math.PI + (i / 21) * Math.PI, rr = s * 0.7;
+  const sp = '#6a4f36', spDk = '#5b4530', f = '#caa276';
+  // quills — bases sit DEEP inside (rr*0.62) so the body fully buries them; tips
+  // poke well past the body. Alternating length gives a tousled edge.
+  ctx.fillStyle = spDk;
+  const N = 22;
+  for (let i = 0; i < N; i++) {
+    const a = Math.PI + (i / (N - 1)) * Math.PI, rr = s * 0.74;
+    const tip = 1.28 + (i % 2) * 0.12;
+    const bw = 0.12; // base half-width — wide so each quill is thick/chunky
+    const tw = 0.035; // tip half-width — a small blunt point, not a thin needle
     ctx.beginPath();
-    ctx.moveTo(Math.cos(a - 0.06) * rr * 0.85, Math.sin(a - 0.06) * rr * 0.85);
-    ctx.lineTo(Math.cos(a) * rr * 1.25, Math.sin(a) * rr * 1.25);
-    ctx.lineTo(Math.cos(a + 0.06) * rr * 0.85, Math.sin(a + 0.06) * rr * 0.85);
+    ctx.moveTo(Math.cos(a - bw) * rr * 0.6, Math.sin(a - bw) * rr * 0.6);
+    ctx.lineTo(Math.cos(a - tw) * rr * tip, Math.sin(a - tw) * rr * tip);
+    ctx.lineTo(Math.cos(a + tw) * rr * tip, Math.sin(a + tw) * rr * tip);
+    ctx.lineTo(Math.cos(a + bw) * rr * 0.6, Math.sin(a + bw) * rr * 0.6);
     ctx.closePath(); ctx.fill();
   }
-  rough(ctx, 0, 0, s * 0.68, s * 0.56, { n: 24, macro: 0.08, roughFn: a => up(a) * 0.08 + 0.02 }, rng, sp);
-  rough(ctx, s * 0.5, s * 0.12, s * 0.3, s * 0.26, { n: 14, macro: 0.12, rough: 0.07 }, rng, f); // face
-  circle(ctx, s * 0.78, s * 0.12, s * 0.06, '#2a1d16'); // nose
-  eye(ctx, s * 0.5, s * 0.02, s * 0.06, 'hedgehog', rng);
-  for (const dx of [-0.3, 0.1]) rough(ctx, s * dx, s * 0.5, s * 0.1, s * 0.07, { n: 8, rough: 0.1 }, rng, f);
+  // solid spiny body — big enough (and drawn ON TOP) to bury every quill base,
+  // so no background shows through between quills on the back (no more hollow gap)
+  rough(ctx, 0, -s * 0.02, s * 0.78, s * 0.66, { n: 28, macro: 0.07, roughFn: a => up(a) * 0.09 + 0.025 }, rng, sp);
+  rough(ctx, s * 0.52, s * 0.16, s * 0.32, s * 0.27, { n: 16, macro: 0.12, rough: 0.07 }, rng, f); // face
+  circle(ctx, s * 0.8, s * 0.18, s * 0.06, '#2a1d16'); // nose
+  eye(ctx, s * 0.5, s * 0.04, s * 0.06, 'hedgehog', rng);
+  for (const dx of [-0.3, 0.12]) rough(ctx, s * dx, s * 0.54, s * 0.1, s * 0.07, { n: 8, rough: 0.1 }, rng, f); // feet
 }
