@@ -417,7 +417,12 @@
 
 .tl-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  // minmax(0,1fr) — NOT plain 1fr (= minmax(auto,1fr)). The `auto` minimum lets
+  // a card's content (a long username) blow the track wider than its sibling,
+  // breaking the 2-col layout. minmax(0,…) lets the track shrink so the name
+  // ellipsizes instead. (The name's own min-width:0 only truncates once the
+  // card is bounded — this is what bounds it.)
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 13px;
   align-content: start;
   grid-auto-rows: max-content;
